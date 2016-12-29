@@ -637,7 +637,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 	}
 
 	@Test
-	public void testBranches() throws Exception {
+	public void testPatternBranches() throws Exception {
 		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
 		DataStream<Event> input = env.fromElements(
@@ -649,7 +649,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.withName("start", Event.class)
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {
@@ -659,19 +659,19 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			.followedBy(
 				Pattern.or(
 					EventPattern.<Event>withName("middle1")
-					.where(new FilterFunction<Event>() {
-						@Override
-						public boolean filter(Event value) throws Exception {
-							return value.getName().equals("middle1");
-						}
-					}),
+						.where(new FilterFunction<Event>() {
+							@Override
+							public boolean filter(Event value) throws Exception {
+								return value.getName().equals("middle1");
+							}
+						}),
 					EventPattern.<Event>withName("middle2")
-					.where(new FilterFunction<Event>() {
-						@Override
-						public boolean filter(Event value) throws Exception {
-							return value.getName().equals("middle2");
-						}
-					})
+						.where(new FilterFunction<Event>() {
+							@Override
+							public boolean filter(Event value) throws Exception {
+								return value.getName().equals("middle2");
+							}
+						})
 				)
 			)
 			.followedBy(

@@ -123,17 +123,11 @@ public class NFACompiler {
 		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
 
 		if (pattern instanceof EventPattern) {
-
-			// set of all generated states
 			EventPattern<T, ?> eventPattern = (EventPattern<T, ?>) pattern;
-
-			// we're traversing the pattern from the end to the beginning --> the first state is the final state
 			State<T> currentState = new State<>(eventPattern.getName(), State.StateType.Final);
 			states.put(eventPattern.getName(), currentState);
 			startStates.addAll(eventPattern.setStates(states, currentState, null));
 		} else {
-
-			// for another patterns compile states for the parents
 			for (Pattern<T, ? extends T> parent : pattern.getParents()) {
 				startStates.addAll(compileStates(parent, states));
 			}

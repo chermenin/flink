@@ -68,7 +68,7 @@ public class Pattern<T, F extends T> {
 	}
 
 	@SafeVarargs
-	public static <T> Pattern<T, T> or(final Pattern<T, ? extends T>... patterns) {
+	public static <T> Pattern<T, ? extends T> or(final Pattern<T, ? extends T>... patterns) {
 		return new Pattern<>(patterns);
 	}
 

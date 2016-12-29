@@ -15,24 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.flink.cep.scala
 
-import org.apache.flink.api.common.functions.util.ListCollector
-import org.apache.flink.cep.scala.pattern.Pattern
-import org.apache.flink.streaming.api.operators.{StreamFlatMap, StreamMap}
-import org.apache.flink.streaming.api.scala._
-import org.apache.flink.streaming.api.transformations.OneInputTransformation
-import org.apache.flink.util.{Collector, TestLogger}
-import org.apache.flink.types.{Either => FEither}
-import org.apache.flink.api.java.tuple.{Tuple2 => FTuple2}
+package org.apache.flink.cep.scala
 
 import java.lang.{Long => JLong}
 import java.util.{Map => JMap}
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
+import org.apache.flink.api.common.functions.util.ListCollector
+import org.apache.flink.api.java.tuple.{Tuple2 => FTuple2}
+import org.apache.flink.cep.{Event, SubEvent}
+import org.apache.flink.cep.scala.pattern.Pattern
+import org.apache.flink.streaming.api.operators.{StreamFlatMap, StreamMap}
+import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.api.transformations.OneInputTransformation
+import org.apache.flink.types.{Either => FEither}
+import org.apache.flink.util.{Collector, TestLogger}
 import org.junit.Assert._
 import org.junit.Test
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
 
@@ -41,9 +43,9 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
   def testScalaJavaAPISelectFunForwarding {
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     val dummyDataStream: DataStream[(Int, Int)] = env.fromElements()
-    val pattern: Pattern[(Int, Int), _] = Pattern.begin[(Int, Int)]("dummy")
+    val pattern: Pattern[(Int, Int), _] = 'dummy
     val pStream: PatternStream[(Int, Int)] = CEP.pattern(dummyDataStream, pattern)
-    val param = mutable.Map("begin" ->(1, 2)).asJava
+    val param = mutable.Map("begin" -> (1, 2)).asJava
     val result: DataStream[(Int, Int)] = pStream
       .select((pattern: mutable.Map[String, (Int, Int)]) => {
         //verifies input parameter forwarding
@@ -61,7 +63,7 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
   def testScalaJavaAPIFlatSelectFunForwarding {
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     val dummyDataStream: DataStream[List[Int]] = env.fromElements()
-    val pattern: Pattern[List[Int], _] = Pattern.begin[List[Int]]("dummy")
+    val pattern: Pattern[List[Int], _] = 'dummy
     val pStream: PatternStream[List[Int]] = CEP.pattern(dummyDataStream, pattern)
     val inList = List(1, 2, 3)
     val inParam = mutable.Map("begin" -> inList).asJava
@@ -87,7 +89,7 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
   def testTimeoutHandling: Unit = {
     val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
     val dummyDataStream: DataStream[String] = env.fromElements()
-    val pattern: Pattern[String, _] = Pattern.begin[String]("dummy")
+    val pattern: Pattern[String, _] = 'dummy
     val pStream: PatternStream[String] = CEP.pattern(dummyDataStream, pattern)
     val inParam = mutable.Map("begin" -> "barfoo").asJava
     val outList = new java.util.ArrayList[Either[String, String]]
@@ -126,5 +128,36 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
       .asInstanceOf[OneInputTransformation[_, _]]
       .getOperator
       .asInstanceOf[T]
+  }
+
+  @Test
+  def testPatternBranches() {
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    val input = env.fromElements(
+      new Event(1, "start", 1.0),
+      new Event(2, "middle1", 2.0),
+      new Event(3, "end", 3.0),
+      new Event(4, "start", 4.0),
+      new Event(5, "middle2", 5.0),
+      new Event(6, "end", 6.0)
+    )
+
+    val pattern: Pattern[Event, Event] =
+      'start.as(classOf[Event]).where(_.getName == "start") ~>
+      ('middle1.as(classOf[Event]).where(_.getName == "middle1")
+       || 'middle2.as(classOf[Event]).where(_.getName == "middle2")) ~>
+      'end.as(classOf[Event]).where(_.getName == "end")
+
+    val result = CEP.pattern(input, pattern)
+      .select((pattern: mutable.Map[String, Event]) => {
+
+        pattern("start").getId + "," +
+        (if (pattern.contains("middle1")) pattern("middle1").getId + "," else "") +
+        (if (pattern.contains("middle2")) pattern("middle2").getId + "," else "") +
+        pattern("end").getId
+      })
+
+    result.print()
+    env.execute()
   }
 }

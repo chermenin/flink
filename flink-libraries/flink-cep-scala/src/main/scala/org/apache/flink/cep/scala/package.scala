@@ -20,7 +20,7 @@ package org.apache.flink.cep
 import org.apache.flink.api.scala.ClosureCleaner
 import org.apache.flink.cep.{PatternStream => JPatternStream}
 
-package object scala {
+package object scala extends CepImplicitExpressionConversions {
 
   /**
     * Utility method to wrap [[org.apache.flink.cep.PatternStream]] for usage with the Scala API.
@@ -40,7 +40,7 @@ package object scala {
 
   private[flink] def cleanClosure[F <: AnyRef](f: F, checkSerializable: Boolean = true): F = {
     ClosureCleaner.clean(f, checkSerializable)
-    return f
+    f
   }
 }
 
