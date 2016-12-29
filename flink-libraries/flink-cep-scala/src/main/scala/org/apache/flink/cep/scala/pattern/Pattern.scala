@@ -70,7 +70,7 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def next(pattern: Pattern[T, F]): Pattern[T, T] = {
+  def next(pattern: Pattern[T, _ <: T]): Pattern[T, T] = {
     Pattern(jPattern.next(pattern.wrappedPattern))
   }
 
@@ -82,7 +82,7 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def followedBy(pattern: Pattern[T, F]): Pattern[T, T] = {
+  def followedBy(pattern: Pattern[T, _ <: T]): Pattern[T, T] = {
     Pattern(jPattern.followedBy(pattern.wrappedPattern))
   }
 }
@@ -101,6 +101,6 @@ object Pattern {
 
   def apply[T](name: String) = new EventPattern[T, T](JEventPattern.withName(name))
 
-  def or[T, F <: T](left: Pattern[T, F], right: Pattern[T, F]) =
+  def or[T](left: Pattern[T, _ <: T], right: Pattern[T, _ <: T]) =
     new Pattern[T, T](JPattern.or(left.wrappedPattern, right.wrappedPattern))
 }

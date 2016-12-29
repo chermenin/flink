@@ -18,19 +18,29 @@
 
 package org.apache.flink.cep.scala
 
-import org.apache.flink.cep.scala.pattern.Pattern
+import org.apache.flink.cep.scala.pattern.{EventPattern, Pattern}
+import org.apache.flink.cep.pattern.{EventPattern => JEventPattern}
 
 import scala.language.implicitConversions
 
 trait CepImplicitPatternOperations[T, F <: T] {
   private[flink] def pattern: Pattern[T, F]
-  def ||(other: Pattern[T, F]): Pattern[T, T] = Pattern.or(pattern, other)
-  def ->(other: Pattern[T, F]): Pattern[T, T] = pattern.next(other)
-  def ~>(other: Pattern[T, F]): Pattern[T, T] = pattern.followedBy(other)
+  def ||(other: Pattern[T, _ <: T]): Pattern[T, T] = Pattern.or(pattern, other)
+  def -->(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.next(other)
+  def ~~>(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.followedBy(other)
 }
 
 trait CepImplicitExpressionConversions {
-  implicit class ResolvedPattern[T, F <: T](p: Pattern[T, F]) extends CepImplicitPatternOperations[T, F] {
+  implicit class ResolvedPattern[T, F <: T](p: Pattern[T, F])
+    extends CepImplicitPatternOperations[T, F] {
+
     def pattern: Pattern[T, F] = p
   }
 }
+
+// scalastyle:off
+object & {
+
+  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.withName(name))
+}
+// scalastyle:on

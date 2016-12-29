@@ -84,13 +84,14 @@ public class NFACompiler {
 
 		} else {
 
-			long windowTime = pattern.getWindowTime() != null
-							  ? pattern.getWindowTime().toMilliseconds() : 0L;
+			long windowTime =
+				pattern.getWindowTime() != null ? pattern.getWindowTime().toMilliseconds() : 0L;
 
 			// add the beginning state
 			final State<T> beginningState;
 			Map<String, State<T>> states = new HashMap<>();
-			Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = compileStates(pattern, states);
+			Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates =
+				compileStates(pattern, states);
 
 			if (states.containsKey(BEGINNING_STATE_NAME)) {
 				beginningState = states.get(BEGINNING_STATE_NAME);
@@ -119,7 +120,9 @@ public class NFACompiler {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Collection<Tuple2<State<T>, Pattern<T, ?>>> compileStates(Pattern<T, ?> pattern, Map<String, State<T>> states) {
+	private static <T> Collection<Tuple2<State<T>, Pattern<T, ?>>> compileStates(
+		Pattern<T, ?> pattern, Map<String, State<T>> states
+	) {
 		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
 
 		if (pattern instanceof EventPattern) {
@@ -142,6 +145,7 @@ public class NFACompiler {
 	 * @param <T> Type of the input events which are processed by the NFA
 	 */
 	public interface NFAFactory<T> extends Serializable {
+
 		NFA<T> createNFA();
 	}
 
@@ -176,7 +180,7 @@ public class NFACompiler {
 
 		@Override
 		public NFA<T> createNFA() {
-			NFA<T> result =  new NFA<>(inputTypeSerializer.duplicate(), windowTime, timeoutHandling);
+			NFA<T> result = new NFA<>(inputTypeSerializer.duplicate(), windowTime, timeoutHandling);
 
 			result.addStates(states);
 

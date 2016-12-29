@@ -143,9 +143,9 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
     )
 
     val pattern: Pattern[Event, Event] =
-      Pattern[Event]("start").where(_.getName == "start") ~>
+      Pattern[Event]("start").where(_.getName == "start") ~~>
       (Pattern[Event]("middle1").where(_.getName == "middle1") ||
-       Pattern[Event]("middle2").where(_.getName == "middle2")) ~>
+       Pattern[Event]("middle2").where(_.getName == "middle2")) ~~>
       Pattern[Event]("end").where(_.getName == "end")
 
     val result = CEP.pattern(input, pattern)

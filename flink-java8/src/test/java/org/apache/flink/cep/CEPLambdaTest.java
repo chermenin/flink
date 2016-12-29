@@ -20,6 +20,7 @@ package org.apache.flink.cep;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
+import org.apache.flink.cep.pattern.EventPattern;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -54,7 +55,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = Pattern.begin("start");
+		Pattern<EventA, ?> dummyPattern = EventPattern.withName("dummy");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
@@ -66,7 +67,7 @@ public class CEPLambdaTest extends TestLogger {
 	}
 
 	/**
-	 * Tests that a Java8 labmda can be passed as a CEP flat select function
+	 * Tests that a Java8 lambda can be passed as a CEP flat select function
 	 */
 	@Test
 	public void testLambdaFlatSelectFunction() {
@@ -81,7 +82,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = Pattern.begin("start");
+		Pattern<EventA, ?> dummyPattern = EventPattern.withName("start");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
