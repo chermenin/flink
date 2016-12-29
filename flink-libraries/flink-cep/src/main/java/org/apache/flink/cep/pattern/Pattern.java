@@ -118,7 +118,13 @@ public class Pattern<T, F extends T> {
 	 * @return A new pattern operator which is appended to this pattern operator
 	 */
 	public Pattern<T, ? extends T> next(final Pattern<T, ? extends T> pattern) {
-		pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+		if (pattern instanceof EventPattern) {
+			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+		} else {
+			for (Pattern<T, ? extends T> parent : pattern.parents) {
+				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+			}
+		}
 		return pattern;
 	}
 
@@ -132,7 +138,14 @@ public class Pattern<T, F extends T> {
 	 */
 	public Pattern<T, ? extends T> followedBy(final Pattern<T, ? extends T> pattern) {
 		canSkip = true;
-		pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+		if (pattern instanceof EventPattern) {
+			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+		} else {
+			for (Pattern<T, ? extends T> parent : pattern.parents) {
+				parent.canSkip = true;
+				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+			}
+		}
 		return pattern;
 	}
 

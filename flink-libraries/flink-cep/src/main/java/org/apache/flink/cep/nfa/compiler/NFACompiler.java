@@ -102,12 +102,15 @@ public class NFACompiler {
 			for (Tuple2<State<T>, Pattern<T, ?>> stateAndPattern : startStates) {
 				State<T> state = stateAndPattern.f0;
 				Pattern<T, ?> statePattern = stateAndPattern.f1;
-				beginningState.addStateTransition(new StateTransition<>(
-					StateTransitionAction.TAKE, state,
-					statePattern instanceof EventPattern
-					? ((EventPattern) statePattern).getFilterFunction()
-					: null
-				));
+				StateTransition.add(
+					beginningState,
+					new StateTransition<>(
+						StateTransitionAction.TAKE, state,
+						statePattern instanceof EventPattern
+						? ((EventPattern) statePattern).getFilterFunction()
+						: null
+					)
+				);
 			}
 
 			return new NFAFactoryImpl<>(inputTypeSerializer, windowTime,

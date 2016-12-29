@@ -123,8 +123,14 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 
 		// add transitions for current state
 		if (name != null && !currentState.isFinal()) {
+			boolean transitionExists = false;
 
-			currentState.addStateTransition(
+			for (StateTransition<T> stateTransition : currentState.getStateTransitions()) {
+
+			}
+
+			StateTransition.add(
+				currentState,
 				new StateTransition<>(
 					StateTransitionAction.TAKE,
 					succeedingState,
@@ -133,7 +139,8 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 			);
 
 			if (isCanSkip()) {
-				currentState.addStateTransition(
+				StateTransition.add(
+					currentState,
 					new StateTransition<>(
 						StateTransitionAction.IGNORE,
 						currentState,

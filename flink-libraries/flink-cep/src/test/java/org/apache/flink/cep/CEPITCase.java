@@ -635,4 +635,84 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 		env.execute();
 	}
+
+	@Test
+	public void testBranches() throws Exception {
+		StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+		DataStream<Event> input = env.fromElements(
+			new Event(1, "start", 1.0),
+			new Event(2, "middle1", 2.0),
+			new Event(3, "end", 3.0),
+			new Event(4, "start", 4.0),
+			new Event(5, "middle2", 5.0),
+			new Event(6, "end", 6.0)
+		);
+
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
+				@Override
+				public boolean filter(Event value) throws Exception {
+					return value.getName().equals("start");
+				}
+			})
+			.followedBy(
+				Pattern.or(
+					EventPattern.<Event>withName("middle1")
+					.where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("middle1");
+						}
+					}),
+					EventPattern.<Event>withName("middle2")
+					.where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("middle2");
+						}
+					})
+				)
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
+
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
+
+		DataStream<String> result =
+			CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
+
+				@Override
+				public String select(Map<String, Event> pattern) {
+					StringBuilder builder = new StringBuilder();
+
+					builder.append(pattern.get("start").getId()).append(",");
+
+					if (pattern.containsKey("middle1")) {
+						builder.append(pattern.get("middle1").getId()).append(",");
+					}
+
+					if (pattern.containsKey("middle2")) {
+						builder.append(pattern.get("middle2").getId()).append(",");
+					}
+
+					builder.append(pattern.get("end").getId());
+
+					return builder.toString();
+				}
+			});
+
+		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
+
+		// expected sequence of matching event ids
+		expected = "1,5,6\n1,2,3\n4,5,6\n1,2,6";
+
+		env.execute();
+	}
 }
