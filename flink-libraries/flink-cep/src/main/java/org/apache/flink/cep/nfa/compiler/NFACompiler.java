@@ -127,7 +127,7 @@ public class NFACompiler {
 			// we're traversing the pattern from the end to the beginning --> the first state is the final state
 			State<T> currentState = new State<>(eventPattern.getName(), State.StateType.Final);
 			states.put(eventPattern.getName(), currentState);
-			startStates.addAll(eventPattern.setStates(states, currentState));
+			startStates.addAll(eventPattern.setStates(states, currentState, null));
 		} else {
 
 			// for another patterns compile states for the parents

@@ -19,6 +19,7 @@
 package org.apache.flink.cep.pattern;
 
 import org.apache.flink.annotation.Internal;
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.cep.nfa.NFA;
 import org.apache.flink.cep.nfa.State;
@@ -136,10 +137,10 @@ public class Pattern<T, F extends T> {
 	}
 
 	@Internal
-	public Collection<Tuple2<State<T>, Pattern<T, ?>>> setStates(Map<String, State<T>> states, State<T> succeedingState) {
+	public Collection<Tuple2<State<T>, Pattern<T, ?>>> setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
 		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
 		for (Pattern<T, ? extends T> parent : parents) {
-			startStates.addAll(parent.setStates(states, succeedingState));
+			startStates.addAll(parent.setStates(states, succeedingState, filterFunction));
 		}
 		return startStates;
 	}

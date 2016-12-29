@@ -102,7 +102,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Collection<Tuple2<State<T>, Pattern<T, ?>>>
-	setStates(Map<String, State<T>> states, State<T> succeedingState) {
+	setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
 
 		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
 
@@ -117,21 +117,29 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 			}
 		}
 
-		startStates.addAll(super.setStates(states, currentState));
+		startStates.addAll(
+			super.setStates(states, currentState, (FilterFunction<T>) this.filterFunction)
+		);
 
 		// add transitions for current state
 		if (name != null && !currentState.isFinal()) {
 
-			currentState.addStateTransition(new StateTransition<>(
-				StateTransitionAction.TAKE,
-				succeedingState,
-				(FilterFunction<T>) filterFunction));
+			currentState.addStateTransition(
+				new StateTransition<>(
+					StateTransitionAction.TAKE,
+					succeedingState,
+					filterFunction
+				)
+			);
 
 			if (isCanSkip()) {
-				currentState.addStateTransition(new StateTransition<>(
-					StateTransitionAction.IGNORE,
-					currentState, null
-				));
+				currentState.addStateTransition(
+					new StateTransition<>(
+						StateTransitionAction.IGNORE,
+						currentState,
+						null
+					)
+				);
 			}
 		}
 
