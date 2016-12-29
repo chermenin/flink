@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.apache.flink.cep.pattern;
+package org.apache.flink.cep.pattern.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 

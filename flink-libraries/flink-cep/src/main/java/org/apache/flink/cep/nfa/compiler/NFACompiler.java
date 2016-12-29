@@ -18,17 +18,17 @@
 
 package org.apache.flink.cep.nfa.compiler;
 
-import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.typeutils.TypeSerializer;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.cep.nfa.NFA;
 import org.apache.flink.cep.nfa.State;
 import org.apache.flink.cep.nfa.StateTransition;
 import org.apache.flink.cep.nfa.StateTransitionAction;
-import org.apache.flink.cep.pattern.FollowedByPattern;
+import org.apache.flink.cep.pattern.EventPattern;
 import org.apache.flink.cep.pattern.Pattern;
-import org.apache.flink.streaming.api.windowing.time.Time;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ import java.util.Map;
  */
 public class NFACompiler {
 
-	protected final static String BEGINNING_STATE_NAME = "$beginningState$";
+	final static String BEGINNING_STATE_NAME = "$beginningState$";
 
 	/**
 	 * Compiles the given pattern into a {@link NFA}.
@@ -77,60 +77,20 @@ public class NFACompiler {
 		TypeSerializer<T> inputTypeSerializer,
 		boolean timeoutHandling) {
 		if (pattern == null) {
+
 			// return a factory for empty NFAs
-			return new NFAFactoryImpl<T>(inputTypeSerializer, 0, Collections.<State<T>>emptyList(), timeoutHandling);
+			return new NFAFactoryImpl<>(inputTypeSerializer, 0,
+										Collections.<State<T>>emptyList(), timeoutHandling);
+
 		} else {
-			// set of all generated states
-			Map<String, State<T>> states = new HashMap<>();
-			long windowTime;
 
-			Pattern<T, ?> succeedingPattern;
-			State<T> succeedingState;
-			Pattern<T, ?> currentPattern = pattern;
-
-			// we're traversing the pattern from the end to the beginning --> the first state is the final state
-			State<T> currentState = new State<>(currentPattern.getName(), State.StateType.Final);
-
-			states.put(currentPattern.getName(), currentState);
-
-			windowTime = currentPattern.getWindowTime() != null ? currentPattern.getWindowTime().toMilliseconds() : 0L;
-
-			while (currentPattern.getPrevious() != null) {
-				succeedingPattern = currentPattern;
-				succeedingState = currentState;
-				currentPattern = currentPattern.getPrevious();
-
-				Time currentWindowTime = currentPattern.getWindowTime();
-
-				if (currentWindowTime != null && currentWindowTime.toMilliseconds() < windowTime) {
-					// the window time is the global minimum of all window times of each state
-					windowTime = currentWindowTime.toMilliseconds();
-				}
-
-				if (states.containsKey(currentPattern.getName())) {
-					currentState = states.get(currentPattern.getName());
-				} else {
-					currentState = new State<>(currentPattern.getName(), State.StateType.Normal);
-					states.put(currentState.getName(), currentState);
-				}
-
-				currentState.addStateTransition(new StateTransition<T>(
-					StateTransitionAction.TAKE,
-					succeedingState,
-					(FilterFunction<T>) succeedingPattern.getFilterFunction()));
-
-				if (succeedingPattern instanceof FollowedByPattern) {
-					// the followed by pattern entails a reflexive ignore transition
-					currentState.addStateTransition(new StateTransition<T>(
-						StateTransitionAction.IGNORE,
-						currentState,
-						null
-					));
-				}
-			}
+			long windowTime = pattern.getWindowTime() != null
+							  ? pattern.getWindowTime().toMilliseconds() : 0L;
 
 			// add the beginning state
 			final State<T> beginningState;
+			Map<String, State<T>> states = new HashMap<>();
+			Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = compileStates(pattern, states);
 
 			if (states.containsKey(BEGINNING_STATE_NAME)) {
 				beginningState = states.get(BEGINNING_STATE_NAME);
@@ -139,14 +99,44 @@ public class NFACompiler {
 				states.put(BEGINNING_STATE_NAME, beginningState);
 			}
 
-			beginningState.addStateTransition(new StateTransition<T>(
-				StateTransitionAction.TAKE,
-				currentState,
-				(FilterFunction<T>) currentPattern.getFilterFunction()
-			));
+			for (Tuple2<State<T>, Pattern<T, ?>> stateAndPattern : startStates) {
+				State<T> state = stateAndPattern.f0;
+				Pattern<T, ?> statePattern = stateAndPattern.f1;
+				beginningState.addStateTransition(new StateTransition<>(
+					StateTransitionAction.TAKE, state,
+					statePattern instanceof EventPattern
+					? ((EventPattern) statePattern).getFilterFunction()
+					: null
+				));
+			}
 
-			return new NFAFactoryImpl<T>(inputTypeSerializer, windowTime, new HashSet<>(states.values()), timeoutHandling);
+			return new NFAFactoryImpl<>(inputTypeSerializer, windowTime,
+										new HashSet<>(states.values()), timeoutHandling);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> Collection<Tuple2<State<T>, Pattern<T, ?>>> compileStates(Pattern<T, ?> pattern, Map<String, State<T>> states) {
+		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
+
+		if (pattern instanceof EventPattern) {
+
+			// set of all generated states
+			EventPattern<T, ?> eventPattern = (EventPattern<T, ?>) pattern;
+
+			// we're traversing the pattern from the end to the beginning --> the first state is the final state
+			State<T> currentState = new State<>(eventPattern.getName(), State.StateType.Final);
+			states.put(eventPattern.getName(), currentState);
+			startStates.addAll(eventPattern.setStates(states, currentState));
+		} else {
+
+			// for another patterns compile states for the parents
+			for (Pattern<T, ? extends T> parent : pattern.getParents()) {
+				startStates.addAll(compileStates(parent, states));
+			}
+		}
+
+		return startStates;
 	}
 
 	/**

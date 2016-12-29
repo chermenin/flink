@@ -22,6 +22,7 @@ import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.cep.pattern.EventPattern;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.streaming.api.TimeCharacteristic;
@@ -31,7 +32,6 @@ import org.apache.flink.streaming.api.functions.AssignerWithPunctuatedWatermarks
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.util.StreamingMultipleProgramsTestBase;
-
 import org.apache.flink.types.Either;
 import org.junit.After;
 import org.junit.Before;
@@ -44,11 +44,10 @@ import java.util.Map;
 @SuppressWarnings("serial")
 public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
-	private String resultPath;
-	private String expected;
-
 	@Rule
 	public TemporaryFolder tempFolder = new TemporaryFolder();
+	private String resultPath;
+	private String expected;
 
 	@Before
 	public void before() throws Exception {
@@ -63,7 +62,6 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 	/**
 	 * Checks that a certain event sequence is recognized
-	 * @throws Exception
 	 */
 	@Test
 	public void testSimplePatternCEP() throws Exception {
@@ -81,43 +79,52 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(8, "end", 1.0)
 		);
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start").where(new FilterFunction<Event>() {
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("start");
-			}
-		})
-		.followedBy("middle").subtype(SubEvent.class).where(
-				new FilterFunction<SubEvent>() {
-
-					@Override
-					public boolean filter(SubEvent value) throws Exception {
-						return value.getName().equals("middle");
-					}
+				@Override
+				public boolean filter(Event value) throws Exception {
+					return value.getName().equals("start");
 				}
+			})
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.subtype(SubEvent.class)
+					.where(
+						new FilterFunction<SubEvent>() {
+
+							@Override
+							public boolean filter(SubEvent value) throws Exception {
+								return value.getName().equals("middle");
+							}
+						}
+					)
 			)
-		.followedBy("end").where(new FilterFunction<Event>() {
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("end");
-			}
-		});
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
 
-		DataStream<String> result = CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
+		DataStream<String> result =
+			CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
 
-			@Override
-			public String select(Map<String, Event> pattern) {
-				StringBuilder builder = new StringBuilder();
+				@Override
+				public String select(Map<String, Event> pattern) {
+					StringBuilder builder = new StringBuilder();
 
-				builder.append(pattern.get("start").getId()).append(",")
-					.append(pattern.get("middle").getId()).append(",")
-					.append(pattern.get("end").getId());
+					builder.append(pattern.get("start").getId()).append(",")
+						.append(pattern.get("middle").getId()).append(",")
+						.append(pattern.get("end").getId());
 
-				return builder.toString();
-			}
-		});
+					return builder.toString();
+				}
+			});
 
 		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
@@ -156,43 +163,52 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start").where(new FilterFunction<Event>() {
-
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("start");
-			}
-		})
-			.followedBy("middle").subtype(SubEvent.class).where(
-				new FilterFunction<SubEvent>() {
-
-					@Override
-					public boolean filter(SubEvent value) throws Exception {
-						return value.getName().equals("middle");
-					}
-				}
-			)
-			.followedBy("end").where(new FilterFunction<Event>() {
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
 
 				@Override
 				public boolean filter(Event value) throws Exception {
-					return value.getName().equals("end");
+					return value.getName().equals("start");
+				}
+			})
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.subtype(SubEvent.class)
+					.where(
+						new FilterFunction<SubEvent>() {
+
+							@Override
+							public boolean filter(SubEvent value) throws Exception {
+								return value.getName().equals("middle");
+							}
+						}
+					)
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
+
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
+
+		DataStream<String> result =
+			CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
+
+				@Override
+				public String select(Map<String, Event> pattern) {
+					StringBuilder builder = new StringBuilder();
+
+					builder.append(pattern.get("start").getId()).append(",")
+						.append(pattern.get("middle").getId()).append(",")
+						.append(pattern.get("end").getId());
+
+					return builder.toString();
 				}
 			});
-
-		DataStream<String> result = CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
-
-			@Override
-			public String select(Map<String, Event> pattern) {
-				StringBuilder builder = new StringBuilder();
-
-				builder.append(pattern.get("start").getId()).append(",")
-					.append(pattern.get("middle").getId()).append(",")
-					.append(pattern.get("end").getId());
-
-				return builder.toString();
-			}
-		});
 
 		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
@@ -216,19 +232,21 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			Tuple2.of(new Event(5, "middle", 5.0), 7L),
 			// last element for high final watermark
 			Tuple2.of(new Event(5, "middle", 5.0), 100L)
-		).assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks<Tuple2<Event,Long>>() {
+		).assignTimestampsAndWatermarks(
+			new AssignerWithPunctuatedWatermarks<Tuple2<Event, Long>>() {
 
-			@Override
-			public long extractTimestamp(Tuple2<Event, Long> element, long previousTimestamp) {
-				return element.f1;
-			}
+				@Override
+				public long extractTimestamp(Tuple2<Event, Long> element, long previousTimestamp) {
+					return element.f1;
+				}
 
-			@Override
-			public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement, long extractedTimestamp) {
-				return new Watermark(lastElement.f1 - 5);
-			}
+				@Override
+				public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement,
+														  long extractedTimestamp) {
+					return new Watermark(lastElement.f1 - 5);
+				}
 
-		}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
+			}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
 
 			@Override
 			public Event map(Tuple2<Event, Long> value) throws Exception {
@@ -236,25 +254,34 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start").where(new FilterFunction<Event>() {
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("start");
-			}
-		}).followedBy("middle").where(new FilterFunction<Event>() {
+				@Override
+				public boolean filter(Event value) throws Exception {
+					return value.getName().equals("start");
+				}
+			})
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("middle");
-			}
-		}).followedBy("end").where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("middle");
+						}
+					})
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("end");
-			}
-		});
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
 
 		DataStream<String> result = CEP.pattern(input, pattern).select(
 			new PatternSelectFunction<Event, String>() {
@@ -299,19 +326,21 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			Tuple2.of(new Event(1, "middle", 5.0), 7L),
 			Tuple2.of(new Event(3, "middle", 6.0), 9L),
 			Tuple2.of(new Event(3, "end", 7.0), 7L)
-		).assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks<Tuple2<Event,Long>>() {
+		).assignTimestampsAndWatermarks(
+			new AssignerWithPunctuatedWatermarks<Tuple2<Event, Long>>() {
 
-			@Override
-			public long extractTimestamp(Tuple2<Event, Long> element, long currentTimestamp) {
-				return element.f1;
-			}
+				@Override
+				public long extractTimestamp(Tuple2<Event, Long> element, long currentTimestamp) {
+					return element.f1;
+				}
 
-			@Override
-			public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement, long extractedTimestamp) {
-				return new Watermark(lastElement.f1 - 5);
-			}
+				@Override
+				public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement,
+														  long extractedTimestamp) {
+					return new Watermark(lastElement.f1 - 5);
+				}
 
-		}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
+			}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
 
 			@Override
 			public Event map(Tuple2<Event, Long> value) throws Exception {
@@ -325,25 +354,34 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start").where(new FilterFunction<Event>() {
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("start");
-			}
-		}).followedBy("middle").where(new FilterFunction<Event>() {
+				@Override
+				public boolean filter(Event value) throws Exception {
+					return value.getName().equals("start");
+				}
+			})
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("middle");
-			}
-		}).followedBy("end").where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("middle");
+						}
+					})
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("end");
-			}
-		});
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
 
 		DataStream<String> result = CEP.pattern(input, pattern).select(
 			new PatternSelectFunction<Event, String>() {
@@ -377,7 +415,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Tuple2<>(0, 2));
 
 		Pattern<Tuple2<Integer, Integer>, ?> pattern =
-			Pattern.<Tuple2<Integer, Integer>>begin("start")
+			EventPattern.<Tuple2<Integer, Integer>>withName("start")
 				.where(new FilterFunction<Tuple2<Integer, Integer>>() {
 					@Override
 					public boolean filter(Tuple2<Integer, Integer> rec) throws Exception {
@@ -387,12 +425,16 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 		PatternStream<Tuple2<Integer, Integer>> pStream = CEP.pattern(input, pattern);
 
-		DataStream<Tuple2<Integer, Integer>> result = pStream.select(new PatternSelectFunction<Tuple2<Integer, Integer>, Tuple2<Integer, Integer>>() {
-			@Override
-			public Tuple2<Integer, Integer> select(Map<String, Tuple2<Integer, Integer>> pattern) throws Exception {
-				return pattern.get("start");
-			}
-		});
+		DataStream<Tuple2<Integer, Integer>>
+			result =
+			pStream.select(
+				new PatternSelectFunction<Tuple2<Integer, Integer>, Tuple2<Integer, Integer>>() {
+					@Override
+					public Tuple2<Integer, Integer> select(
+						Map<String, Tuple2<Integer, Integer>> pattern) throws Exception {
+						return pattern.get("start");
+					}
+				});
 
 		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
@@ -408,14 +450,17 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 		DataStream<Integer> input = env.fromElements(1, 2);
 
-		Pattern<Integer, ?> pattern = Pattern.<Integer>begin("start").followedBy("end").within(Time.days(1));
+		Pattern<Integer, ?> pattern = EventPattern.<Integer>withName("start")
+			.followedBy(EventPattern.<Integer>withName("end"))
+			.within(Time.days(1));
 
-		DataStream<Integer> result = CEP.pattern(input, pattern).select(new PatternSelectFunction<Integer, Integer>() {
-			@Override
-			public Integer select(Map<String, Integer> pattern) throws Exception {
-				return pattern.get("start") + pattern.get("end");
-			}
-		});
+		DataStream<Integer> result =
+			CEP.pattern(input, pattern).select(new PatternSelectFunction<Integer, Integer>() {
+				@Override
+				public Integer select(Map<String, Integer> pattern) throws Exception {
+					return pattern.get("start") + pattern.get("end");
+				}
+			});
 
 		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
@@ -436,19 +481,21 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			Tuple2.of(new Event(1, "middle", 2.0), 5L),
 			Tuple2.of(new Event(1, "start", 2.0), 4L),
 			Tuple2.of(new Event(1, "end", 2.0), 6L)
-		).assignTimestampsAndWatermarks(new AssignerWithPunctuatedWatermarks<Tuple2<Event,Long>>() {
+		).assignTimestampsAndWatermarks(
+			new AssignerWithPunctuatedWatermarks<Tuple2<Event, Long>>() {
 
-			@Override
-			public long extractTimestamp(Tuple2<Event, Long> element, long currentTimestamp) {
-				return element.f1;
-			}
+				@Override
+				public long extractTimestamp(Tuple2<Event, Long> element, long currentTimestamp) {
+					return element.f1;
+				}
 
-			@Override
-			public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement, long extractedTimestamp) {
-				return new Watermark(lastElement.f1 - 5);
-			}
+				@Override
+				public Watermark checkAndGetNextWatermark(Tuple2<Event, Long> lastElement,
+														  long extractedTimestamp) {
+					return new Watermark(lastElement.f1 - 5);
+				}
 
-		}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
+			}).map(new MapFunction<Tuple2<Event, Long>, Event>() {
 
 			@Override
 			public Event map(Tuple2<Event, Long> value) throws Exception {
@@ -456,30 +503,41 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start").where(new FilterFunction<Event>() {
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+			.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("start");
-			}
-		}).followedBy("middle").where(new FilterFunction<Event>() {
+				@Override
+				public boolean filter(Event value) throws Exception {
+					return value.getName().equals("start");
+				}
+			})
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("middle");
-			}
-		}).followedBy("end").where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("middle");
+						}
+					})
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
 
-			@Override
-			public boolean filter(Event value) throws Exception {
-				return value.getName().equals("end");
-			}
-		}).within(Time.milliseconds(3));
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			)
+			.within(Time.milliseconds(3));
 
 		DataStream<Either<String, String>> result = CEP.pattern(input, pattern).select(
 			new PatternTimeoutFunction<Event, String>() {
 				@Override
-				public String timeout(Map<String, Event> pattern, long timeoutTimestamp) throws Exception {
+				public String timeout(Map<String, Event> pattern, long timeoutTimestamp)
+					throws Exception {
 					return pattern.get("start").getPrice() + "";
 				}
 			},
@@ -508,7 +566,6 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 	/**
 	 * Checks that a certain event sequence is recognized with an OR filter
-	 * @throws Exception
 	 */
 	@Test
 	public void testSimpleOrFilterPatternCEP() throws Exception {
@@ -523,47 +580,53 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = Pattern.<Event>begin("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {
 					return value.getName().equals("start");
 				}
 			})
-			.followedBy("middle")
-			.where(new FilterFunction<Event>() {
-				@Override
-				public boolean filter(Event value) throws Exception {
-					return value.getPrice() == 2.0;
-				}
-			})
-			.or(new FilterFunction<Event>() {
-				@Override
-				public boolean filter(Event value) throws Exception {
-					return value.getPrice() == 5.0;
-				}
-			})
-			.followedBy("end").where(new FilterFunction<Event>() {
+			.followedBy(
+				EventPattern.<Event>withName("middle")
+					.where(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getPrice() == 2.0;
+						}
+					})
+					.or(new FilterFunction<Event>() {
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getPrice() == 5.0;
+						}
+					})
+			)
+			.followedBy(
+				EventPattern.<Event>withName("end")
+					.where(new FilterFunction<Event>() {
+
+						@Override
+						public boolean filter(Event value) throws Exception {
+							return value.getName().equals("end");
+						}
+					})
+			);
+
+		DataStream<String> result =
+			CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
 
 				@Override
-				public boolean filter(Event value) throws Exception {
-					return value.getName().equals("end");
+				public String select(Map<String, Event> pattern) {
+					StringBuilder builder = new StringBuilder();
+
+					builder.append(pattern.get("start").getId()).append(",")
+						.append(pattern.get("middle").getId()).append(",")
+						.append(pattern.get("end").getId());
+
+					return builder.toString();
 				}
 			});
-
-		DataStream<String> result = CEP.pattern(input, pattern).select(new PatternSelectFunction<Event, String>() {
-
-			@Override
-			public String select(Map<String, Event> pattern) {
-				StringBuilder builder = new StringBuilder();
-
-				builder.append(pattern.get("start").getId()).append(",")
-					.append(pattern.get("middle").getId()).append(",")
-					.append(pattern.get("end").getId());
-
-				return builder.toString();
-			}
-		});
 
 		result.writeAsText(resultPath, FileSystem.WriteMode.OVERWRITE);
 
