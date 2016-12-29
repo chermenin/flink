@@ -68,7 +68,7 @@ public class Pattern<T, F extends T> {
 	}
 
 	@SafeVarargs
-	public static <T> Pattern<T, ? extends T> or(final Pattern<T, ? extends T>... patterns) {
+	public static <T> Pattern<T, T> or(final Pattern<T, ? extends T>... patterns) {
 		return new Pattern<>(patterns);
 	}
 
@@ -117,7 +117,8 @@ public class Pattern<T, F extends T> {
 	 * @param pattern New pattern operator
 	 * @return A new pattern operator which is appended to this pattern operator
 	 */
-	public Pattern<T, ? extends T> next(final Pattern<T, ? extends T> pattern) {
+	@SuppressWarnings("unchecked")
+	public Pattern<T, T> next(final Pattern<T, ? extends T> pattern) {
 		if (pattern instanceof EventPattern) {
 			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
 		} else {
@@ -125,7 +126,7 @@ public class Pattern<T, F extends T> {
 				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
 			}
 		}
-		return pattern;
+		return (Pattern<T, T>) pattern;
 	}
 
 	/**
@@ -136,7 +137,8 @@ public class Pattern<T, F extends T> {
 	 * @param pattern New pattern operator
 	 * @return A new pattern operator which is appended to this pattern operator
 	 */
-	public Pattern<T, ? extends T> followedBy(final Pattern<T, ? extends T> pattern) {
+	@SuppressWarnings("unchecked")
+	public Pattern<T, T> followedBy(final Pattern<T, ? extends T> pattern) {
 		canSkip = true;
 		if (pattern instanceof EventPattern) {
 			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
@@ -146,7 +148,7 @@ public class Pattern<T, F extends T> {
 				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
 			}
 		}
-		return pattern;
+		return (Pattern<T, T>) pattern;
 	}
 
 	@Internal

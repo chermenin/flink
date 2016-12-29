@@ -19,6 +19,7 @@
 package org.apache.flink.cep.scala.pattern
 
 import org.apache.flink.cep.pattern.{Pattern => JPattern}
+import org.apache.flink.cep.pattern.{EventPattern => JEventPattern}
 import org.apache.flink.streaming.api.windowing.time.Time
 
 /**
@@ -69,8 +70,8 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def next(pattern: Pattern[T, F]): Pattern[T, F] = {
-    Pattern(jPattern.next(pattern.wrappedPattern)).asInstanceOf[Pattern[T, F]]
+  def next(pattern: Pattern[T, F]): Pattern[T, T] = {
+    Pattern(jPattern.next(pattern.wrappedPattern))
   }
 
   /**
@@ -81,8 +82,8 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def followedBy(pattern: Pattern[T, F]): Pattern[T, F] = {
-    Pattern(jPattern.followedBy(pattern.wrappedPattern)).asInstanceOf[Pattern[T, F]]
+  def followedBy(pattern: Pattern[T, F]): Pattern[T, T] = {
+    Pattern(jPattern.followedBy(pattern.wrappedPattern))
   }
 }
 
@@ -98,6 +99,8 @@ object Pattern {
     */
   def apply[T, F <: T](jPattern: JPattern[T, F]) = new Pattern[T, F](jPattern)
 
+  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.withName(name))
+
   def or[T, F <: T](left: Pattern[T, F], right: Pattern[T, F]) =
-    new Pattern[T, F](JPattern.or(left.wrappedPattern, right.wrappedPattern).asInstanceOf[JPattern[T, F]])
+    new Pattern[T, T](JPattern.or(left.wrappedPattern, right.wrappedPattern))
 }

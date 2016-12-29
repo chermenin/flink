@@ -18,39 +18,19 @@
 
 package org.apache.flink.cep.scala
 
-import org.apache.flink.cep.scala.pattern.{EventPattern, Pattern}
+import org.apache.flink.cep.scala.pattern.Pattern
 
 import scala.language.implicitConversions
 
 trait CepImplicitPatternOperations[T, F <: T] {
-
   private[flink] def pattern: Pattern[T, F]
-
-  def ||(other: Pattern[T, F]): Pattern[T, F] = Pattern.or(pattern, other)
-  def ->(other: Pattern[T, F]): Pattern[T, F] = pattern.next(other)
-  def ~>(other: Pattern[T, F]): Pattern[T, F] = pattern.followedBy(other)
-}
-
-trait CepImplicitEventPatternOperations[T] extends CepImplicitPatternOperations[T, T] {
-
-  private[flink] def pattern: EventPattern[T, T]
-
-  def as[S](clazz: Class[S]): EventPattern[S, S] = pattern.asInstanceOf[EventPattern[S, S]]
-  def subtype[S <: T](clazz: Class[S]): EventPattern[T, S] = pattern.subtype(clazz)
-
-  def where(filterFun: T => Boolean): EventPattern[T, T] = {
-    pattern.where(filterFun)
-  }
+  def ||(other: Pattern[T, F]): Pattern[T, T] = Pattern.or(pattern, other)
+  def ->(other: Pattern[T, F]): Pattern[T, T] = pattern.next(other)
+  def ~>(other: Pattern[T, F]): Pattern[T, T] = pattern.followedBy(other)
 }
 
 trait CepImplicitExpressionConversions {
-  implicit class UnresolvedPattern[T](s: Symbol) extends CepImplicitEventPatternOperations[T] {
-    def pattern: EventPattern[T, T] = EventPattern[T](s.name)
-  }
-
   implicit class ResolvedPattern[T, F <: T](p: Pattern[T, F]) extends CepImplicitPatternOperations[T, F] {
     def pattern: Pattern[T, F] = p
   }
-
-  implicit def symbolToPattern[T](sym: Symbol): EventPattern[T, T] = EventPattern[T](sym.name)
 }
