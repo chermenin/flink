@@ -53,8 +53,6 @@ public class Pattern<T, F extends T> {
 	// previous pattern operator
 	private Collection<Pattern<T, ? extends T>> parents;
 
-	private boolean canSkip;
-
 	// window length in which the pattern match has to occur
 	private Time windowTime;
 
@@ -76,8 +74,10 @@ public class Pattern<T, F extends T> {
 		return parents;
 	}
 
-	boolean isCanSkip() {
-		return canSkip;
+	protected void setSkipped() {
+		for (Pattern<T, ? extends T> parent : parents) {
+			parent.setSkipped();
+		}
 	}
 
 	public Time getWindowTime() {
@@ -139,15 +139,8 @@ public class Pattern<T, F extends T> {
 	 */
 	@SuppressWarnings("unchecked")
 	public Pattern<T, T> followedBy(final Pattern<T, ? extends T> pattern) {
-		canSkip = true;
-		if (pattern instanceof EventPattern) {
-			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
-		} else {
-			for (Pattern<T, ? extends T> parent : pattern.parents) {
-				parent.canSkip = true;
-				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
-			}
-		}
+		this.setSkipped();
+		next(pattern);
 		return (Pattern<T, T>) pattern;
 	}
 

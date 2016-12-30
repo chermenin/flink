@@ -37,6 +37,9 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	// name of the pattern operator
 	private final String name;
 
+	// pattern can be skipped (follow by pattern)
+	private boolean canSkip;
+
 	// filter condition for an event to be matched
 	private FilterFunction<F> filterFunction;
 
@@ -59,6 +62,11 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	@Override
 	public FilterFunction<F> getFilterFunction() {
 		return filterFunction;
+	}
+
+	@Override
+	protected void setSkipped() {
+		canSkip = true;
 	}
 
 	/**
@@ -147,12 +155,12 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 				StateTransitionAction.TAKE,
 				succeedingState,
 				filterFunction));
+		}
 
-			if (isCanSkip()) {
-				currentState.addStateTransition(new StateTransition<>(
-					StateTransitionAction.IGNORE,
-					currentState, null));
-			}
+		if (canSkip) {
+			currentState.addStateTransition(new StateTransition<>(
+				StateTransitionAction.IGNORE,
+				currentState, null));
 		}
 
 		if (getParents().isEmpty()) {
