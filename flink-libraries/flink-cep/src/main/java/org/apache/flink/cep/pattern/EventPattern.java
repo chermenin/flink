@@ -56,6 +56,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 		return name;
 	}
 
+	@Override
 	public FilterFunction<F> getFilterFunction() {
 		return filterFunction;
 	}
@@ -142,24 +143,15 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 		// add transitions for current state
 		if (name != null && !currentState.isFinal()) {
 
-			StateTransition.add(
-				currentState,
-				new StateTransition<>(
-					StateTransitionAction.TAKE,
-					succeedingState,
-					filterFunction
-				)
-			);
+			currentState.addStateTransition(new StateTransition<>(
+				StateTransitionAction.TAKE,
+				succeedingState,
+				filterFunction));
 
 			if (isCanSkip()) {
-				StateTransition.add(
-					currentState,
-					new StateTransition<>(
-						StateTransitionAction.IGNORE,
-						currentState,
-						null
-					)
-				);
+				currentState.addStateTransition(new StateTransition<>(
+					StateTransitionAction.IGNORE,
+					currentState, null));
 			}
 		}
 

@@ -151,6 +151,10 @@ public class Pattern<T, F extends T> {
 		return (Pattern<T, T>) pattern;
 	}
 
+	public FilterFunction<F> getFilterFunction() {
+		return null;
+	}
+
 	@Internal
 	public Collection<Tuple2<State<T>, Pattern<T, ?>>> setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
 		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();

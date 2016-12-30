@@ -81,14 +81,4 @@ public class StateTransition<T> implements Serializable {
 
 		return builder.toString();
 	}
-
-	public static <T> void add(State<T> state, StateTransition<T> transition) {
-		for (StateTransition<T> stateTransition : state.getStateTransitions()) {
-			if (stateTransition.equals(transition)) {
-				return;
-			}
-		}
-		state.addStateTransition(transition);
-	}
-
 }

@@ -46,10 +46,10 @@ public class NFACompiler {
 	/**
 	 * Compiles the given pattern into a {@link NFA}.
 	 *
-	 * @param pattern Definition of sequence pattern
+	 * @param pattern             Definition of sequence pattern
 	 * @param inputTypeSerializer Serializer for the input type
-	 * @param timeoutHandling True if the NFA shall return timed out event patterns
-	 * @param <T> Type of the input events
+	 * @param timeoutHandling     True if the NFA shall return timed out event patterns
+	 * @param <T>                 Type of the input events
 	 * @return Non-deterministic finite automaton representing the given pattern
 	 */
 	public static <T> NFA<T> compile(
@@ -65,10 +65,10 @@ public class NFACompiler {
 	 * Compiles the given pattern into a {@link NFAFactory}. The NFA factory can be used to create
 	 * multiple NFAs.
 	 *
-	 * @param pattern Definition of sequence pattern
+	 * @param pattern             Definition of sequence pattern
 	 * @param inputTypeSerializer Serializer for the input type
-	 * @param timeoutHandling True if the NFA shall return timed out event patterns
-	 * @param <T> Type of the input events
+	 * @param timeoutHandling     True if the NFA shall return timed out event patterns
+	 * @param <T>                 Type of the input events
 	 * @return Factory for NFAs corresponding to the given pattern
 	 */
 	@SuppressWarnings("unchecked")
@@ -103,15 +103,11 @@ public class NFACompiler {
 			for (Tuple2<State<T>, Pattern<T, ?>> stateAndPattern : startStates) {
 				State<T> state = stateAndPattern.f0;
 				Pattern<T, ?> statePattern = stateAndPattern.f1;
-				StateTransition.add(
-					beginningState,
-					new StateTransition<>(
-						StateTransitionAction.TAKE, state,
-						statePattern instanceof EventPattern
-						? ((EventPattern) statePattern).getFilterFunction()
-						: null
-					)
-				);
+				beginningState.addStateTransition(new StateTransition<>(
+					StateTransitionAction.TAKE, state,
+					statePattern instanceof EventPattern
+					? ((EventPattern) statePattern).getFilterFunction()
+					: null));
 			}
 
 			return new NFAFactoryImpl<>(inputTypeSerializer, windowTime,
