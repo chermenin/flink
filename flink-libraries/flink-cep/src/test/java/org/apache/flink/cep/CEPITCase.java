@@ -79,7 +79,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(8, "end", 1.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -88,7 +88,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.subtype(SubEvent.class)
 					.where(
 						new FilterFunction<SubEvent>() {
@@ -101,7 +101,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					)
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -163,7 +163,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -172,7 +172,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.subtype(SubEvent.class)
 					.where(
 						new FilterFunction<SubEvent>() {
@@ -185,7 +185,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					)
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -254,7 +254,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -263,7 +263,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -273,7 +273,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					})
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -354,7 +354,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -363,7 +363,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -373,7 +373,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					})
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -415,7 +415,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Tuple2<>(0, 2));
 
 		Pattern<Tuple2<Integer, Integer>, ?> pattern =
-			EventPattern.<Tuple2<Integer, Integer>>withName("start")
+			EventPattern.<Tuple2<Integer, Integer>>event("start")
 				.where(new FilterFunction<Tuple2<Integer, Integer>>() {
 					@Override
 					public boolean filter(Tuple2<Integer, Integer> rec) throws Exception {
@@ -450,8 +450,8 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 		DataStream<Integer> input = env.fromElements(1, 2);
 
-		Pattern<Integer, ?> pattern = EventPattern.<Integer>withName("start")
-			.followedBy(EventPattern.<Integer>withName("end"))
+		Pattern<Integer, ?> pattern = EventPattern.<Integer>event("start")
+			.followedBy(EventPattern.<Integer>event("end"))
 			.within(Time.days(1));
 
 		DataStream<Integer> result =
@@ -503,7 +503,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -512,7 +512,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -522,7 +522,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					})
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -580,7 +580,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>withName("start")
+		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {
@@ -588,7 +588,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>withName("middle")
+				EventPattern.<Event>event("middle")
 					.where(new FilterFunction<Event>() {
 						@Override
 						public boolean filter(Event value) throws Exception {
@@ -603,7 +603,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 					})
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override
@@ -649,7 +649,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.withName("start", Event.class)
+		Pattern<Event, ?> pattern = EventPattern.event("start", Event.class)
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {
@@ -658,14 +658,14 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			})
 			.followedBy(
 				Pattern.or(
-					EventPattern.<Event>withName("middle1")
+					EventPattern.<Event>event("middle1")
 						.where(new FilterFunction<Event>() {
 							@Override
 							public boolean filter(Event value) throws Exception {
 								return value.getName().equals("middle1");
 							}
 						}),
-					EventPattern.<Event>withName("middle2")
+					EventPattern.<Event>event("middle2")
 						.where(new FilterFunction<Event>() {
 							@Override
 							public boolean filter(Event value) throws Exception {
@@ -675,7 +675,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				)
 			)
 			.followedBy(
-				EventPattern.<Event>withName("end")
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 
 						@Override

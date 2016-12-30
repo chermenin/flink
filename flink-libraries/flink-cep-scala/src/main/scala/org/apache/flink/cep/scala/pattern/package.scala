@@ -31,7 +31,7 @@ package object pattern {
     */
   private[flink] def wrapPattern[T, F <: T](javaPattern: JPattern[T, F])
   : Option[Pattern[T, F]] = javaPattern match {
-    case f: JEventPattern[T, F] => Some(EventPattern[T](f.getName).asInstanceOf[Pattern[T, F]])
+    case f: JEventPattern[T, F] => Some(Pattern[T, F](f))
     case p: JPattern[T, F] => Some(Pattern[T, F](p))
     case _ => None
   }

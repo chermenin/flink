@@ -62,7 +62,8 @@ abstract class ScalaAPICompletenessTestBase extends TestLogger {
       javaClassName: String,
       scalaClassName: String,
       javaClass: Class[_],
-      scalaClass: Class[_]) {
+      scalaClass: Class[_],
+      exceptedMethods: Set[String] = Set()) {
     val javaMethods = javaClass.getMethods
       .filterNot(_.isAccessible)
       .filterNot(isExcludedByName)
@@ -75,7 +76,7 @@ abstract class ScalaAPICompletenessTestBase extends TestLogger {
       .filterNot(isExcludedByInterface)
       .map(m => m.getName).toSet
 
-    val missingMethods = javaMethods -- scalaMethods
+    val missingMethods = javaMethods -- scalaMethods -- exceptedMethods
 
     for (method <- missingMethods) {
       fail("Method " + method + " from " + javaClass + " is missing from " + scalaClassName + ".")

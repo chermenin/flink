@@ -52,7 +52,7 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     *
     * @return Filter condition for an event to be matched
     */
-  def getFilterFunction: Option[FilterFunction[F]] = Option(jEventPattern.getFilterFunction)
+  override def getFilterFunction: Option[FilterFunction[F]] = Option(jEventPattern.getFilterFunction)
 
   /**
     * Applies a subtype constraint on the current pattern operator. This means that an event has
@@ -155,5 +155,5 @@ object EventPattern {
     * @tparam T Base type of the elements appearing in the pattern
     * @return New wrapping Pattern object
     */
-  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.withName[T](name))
+  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event[T](name))
 }

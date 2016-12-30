@@ -39,6 +39,7 @@ class PatternScalaAPICompletenessTest extends ScalaAPICompletenessTestBase {
 
   @Test
   override def testCompleteness(): Unit = {
-    checkMethods("Pattern", "Pattern", classOf[JPattern[_, _]], classOf[Pattern[_, _]])
+    checkMethods("Pattern", "Pattern",
+                 classOf[JPattern[_, _]], classOf[Pattern[_, _]], Set("setStates"))
   }
 }

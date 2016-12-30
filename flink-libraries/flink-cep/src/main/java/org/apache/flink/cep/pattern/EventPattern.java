@@ -47,11 +47,11 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 		this.name = name;
 	}
 
-	public static <T> EventPattern<T, T> withName(final String name) {
+	public static <T> EventPattern<T, T> event(final String name) {
 		return new EventPattern<>(name);
 	}
 
-	public static <T> EventPattern<T, T> withName(final String name, Class<T> tClass) {
+	public static <T> EventPattern<T, T> event(final String name, Class<T> tClass) {
 		return new EventPattern<>(name);
 	}
 

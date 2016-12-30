@@ -18,9 +18,12 @@
 
 package org.apache.flink.cep.scala.pattern
 
+import org.apache.flink.api.common.functions.FilterFunction
 import org.apache.flink.cep.pattern.{Pattern => JPattern}
 import org.apache.flink.cep.pattern.{EventPattern => JEventPattern}
 import org.apache.flink.streaming.api.windowing.time.Time
+
+import collection.JavaConverters._
 
 /**
   * Base class for a pattern definition.
@@ -48,6 +51,18 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @return Window length in which the pattern match has to occur
     */
   def getWindowTime: Option[Time] = Option(jPattern.getWindowTime)
+
+  /**
+    *
+    * @return Filter condition for an event to be matched
+    */
+  def getFilterFunction: Option[FilterFunction[F]] = Option(jPattern.getFilterFunction)
+
+  /**
+    *
+    * @return Parent patterns for this one
+    */
+  def getParents: Set[Pattern[T, _ <: T]] = jPattern.getParents.asScala.map(p => Pattern(p)).toSet
 
   /**
     * Defines the maximum time interval for a matching pattern. This means that the time gap
@@ -99,7 +114,7 @@ object Pattern {
     */
   def apply[T, F <: T](jPattern: JPattern[T, F]) = new Pattern[T, F](jPattern)
 
-  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.withName(name))
+  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event(name))
 
   def or[T](left: Pattern[T, _ <: T], right: Pattern[T, _ <: T]) =
     new Pattern[T, T](JPattern.or(left.wrappedPattern, right.wrappedPattern))

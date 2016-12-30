@@ -29,8 +29,6 @@ import org.apache.flink.util.TestLogger;
 
 import org.junit.Test;
 
-import java.util.Map;
-
 import static org.junit.Assert.*;
 
 public class CEPLambdaTest extends TestLogger {
@@ -55,7 +53,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = EventPattern.withName("dummy");
+		Pattern<EventA, ?> dummyPattern = EventPattern.event("dummy");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
@@ -82,7 +80,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = EventPattern.withName("start");
+		Pattern<EventA, ?> dummyPattern = EventPattern.event("start");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
