@@ -63,8 +63,7 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @return The same pattern operator with the new subtype constraint
     */
   def subtype[S <: F](clazz: Class[S]): EventPattern[T, S] = {
-    jEventPattern.subtype(clazz)
-    this.asInstanceOf[EventPattern[T, S]]
+    EventPattern[T, S](jEventPattern.subtype(clazz))
   }
 
   /**
@@ -74,8 +73,7 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @return The same pattern operator where the new filter condition is set
     */
   def where(filter: FilterFunction[F]): EventPattern[T, F] = {
-    jEventPattern.where(filter)
-    this
+    EventPattern[T, F](jEventPattern.where(filter))
   }
 
   /**
@@ -85,8 +83,7 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @return The same pattern operator where the new filter condition is set
     */
   def or(filter: FilterFunction[F]): EventPattern[T, F] = {
-    jEventPattern.or(filter)
-    this
+    EventPattern[T, F](jEventPattern.or(filter))
   }
 
   /**
@@ -96,8 +93,7 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @return The same pattern operator where the new filter condition is set
     */
   def and(filter: FilterFunction[F]): EventPattern[T, F] = {
-    jEventPattern.and(filter)
-    this
+    EventPattern[T, F](jEventPattern.and(filter))
   }
 
   /**
@@ -156,4 +152,7 @@ object EventPattern {
     * @return New wrapping Pattern object
     */
   def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event[T](name))
+
+  private def apply[T, F <: T](jEventPattern: JEventPattern[T, F]): EventPattern[T, F] =
+    new EventPattern[T, F](jEventPattern)
 }

@@ -39,7 +39,7 @@ class PatternTest {
   @Test
   def testStrictContiguity(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") --> &[Event]("next") --> &[Event]("end")
+      &[Event]("start") -> &[Event]("next") -> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .next(event[Event]("next"))
@@ -54,7 +54,7 @@ class PatternTest {
   @Test
   def testNonStrictContiguity(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") ~~> &[Event]("next") ~~> &[Event]("end")
+      &[Event]("start") ->> &[Event]("next") ->> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .followedBy(event[Event]("next"))
@@ -67,8 +67,8 @@ class PatternTest {
   @Test
   def testStrictContiguityWithCondition(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") -->
-      &[Event]("next").where(_.getName == "foobar") -->
+      &[Event]("start") ->
+      &[Event]("next").where(_.getName == "foobar") ->
       &[Event]("end").where(_.getId == 42)
 
     val jPattern = event[Event]("start")
@@ -94,7 +94,7 @@ class PatternTest {
   @Test
   def testPatternWithSubtyping(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") --> &[Event]("subevent").subtype(classOf[SubEvent]) ~~> &[Event]("end")
+      &[Event]("start") -> &[Event]("subevent").subtype(classOf[SubEvent]) ->> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .next(
@@ -112,9 +112,9 @@ class PatternTest {
   @Test
   def testPatternWithSubtypingAndFilter(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") -->
+      &[Event]("start") ->
       &[Event]("subevent").subtype(classOf[SubEvent])
-        .where(_ => false) ~~> &[Event]("end")
+        .where(_ => false) ->> &[Event]("end")
 
     val jpattern = event[Event]("start")
       .next(

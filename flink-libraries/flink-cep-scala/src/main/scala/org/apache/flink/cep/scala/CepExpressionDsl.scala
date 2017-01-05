@@ -26,15 +26,24 @@ import scala.language.implicitConversions
 trait CepImplicitPatternOperations[T, F <: T] {
   private[flink] def pattern: Pattern[T, F]
   def ||(other: Pattern[T, _ <: T]): Pattern[T, T] = Pattern.or(pattern, other)
-  def -->(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.next(other)
-  def ~~>(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.followedBy(other)
+  def ->(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.next(other)
+  def ->>(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.followedBy(other)
+}
+
+trait CepImplicitEventPatternOperations[T, F <: T]
+  extends CepImplicitPatternOperations[T, F] {
+  private[flink] def pattern: EventPattern[T, F]
 }
 
 trait CepImplicitExpressionConversions {
   implicit class ResolvedPattern[T, F <: T](p: Pattern[T, F])
     extends CepImplicitPatternOperations[T, F] {
-
     def pattern: Pattern[T, F] = p
+  }
+
+  implicit class ResolvedEventPattern[T, F <: T](p: EventPattern[T, F])
+    extends CepImplicitEventPatternOperations[T, F] {
+    def pattern: EventPattern[T, F] = p
   }
 }
 
