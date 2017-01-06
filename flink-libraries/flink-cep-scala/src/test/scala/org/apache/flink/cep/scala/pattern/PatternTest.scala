@@ -94,7 +94,7 @@ class PatternTest {
   @Test
   def testPatternWithSubtyping(): Unit = {
     val pattern: Pattern[Event, Event] =
-      &[Event]("start") -> &[Event]("subevent").subtype(classOf[SubEvent]) ->> &[Event]("end")
+      &[Event]("start") -> &[Event]("subevent", classOf[SubEvent]) ->> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .next(
@@ -113,7 +113,7 @@ class PatternTest {
   def testPatternWithSubtypingAndFilter(): Unit = {
     val pattern: Pattern[Event, Event] =
       &[Event]("start") ->
-      &[Event]("subevent").subtype(classOf[SubEvent])
+      &[Event]("subevent", classOf[SubEvent])
         .where(_ => false) ->> &[Event]("end")
 
     val jpattern = event[Event]("start")

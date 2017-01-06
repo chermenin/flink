@@ -50,6 +50,10 @@ trait CepImplicitExpressionConversions {
 // scalastyle:off
 object & {
 
-  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event(name))
+  def apply[T](name: String): EventPattern[T, T] =
+    new EventPattern[T, T](JEventPattern.event(name))
+
+  def apply[T](name: String, clazz: Class[_ <: T]): EventPattern[T, _ <: T] =
+    new EventPattern[T, T](JEventPattern.event(name)).subtype(clazz)
 }
 // scalastyle:on
