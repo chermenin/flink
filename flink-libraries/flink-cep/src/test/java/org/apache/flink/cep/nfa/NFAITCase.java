@@ -57,7 +57,7 @@ public class NFAITCase extends TestLogger {
 		inputEvents.add(new StreamRecord<Event>(new Event(43, "start", 1.0), 4));
 		inputEvents.add(new StreamRecord<Event>(endEvent, 5));
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				private static final long serialVersionUID = 5726188262756267490L;
 
@@ -67,8 +67,7 @@ public class NFAITCase extends TestLogger {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>event("middle")
-					.subtype(SubEvent.class)
+				EventPattern.<SubEvent>event("middle")
 					.where(new FilterFunction<SubEvent>() {
 						private static final long serialVersionUID = 6215754202506583964L;
 
@@ -129,7 +128,7 @@ public class NFAITCase extends TestLogger {
 		events.add(new StreamRecord<Event>(endEvent = new Event(5, "end", 1.0), 11));
 		events.add(new StreamRecord<Event>(new Event(6, "end", 1.0), 13));
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				private static final long serialVersionUID = 7907391379273505897L;
 
@@ -218,7 +217,7 @@ public class NFAITCase extends TestLogger {
 		expectedTimeoutPatterns.add(Tuple2.of(timeoutPattern3, 11L));
 		expectedTimeoutPatterns.add(Tuple2.of(timeoutPattern4, 13L));
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				private static final long serialVersionUID = 7907391379273505897L;
 

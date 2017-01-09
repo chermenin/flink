@@ -47,7 +47,7 @@ class PatternStream[T](jPatternStream: JPatternStream[T]) {
 
   private[flink] def wrappedPatternStream = jPatternStream
 
-  def getPattern: Pattern[T, T] = Pattern(jPatternStream.getPattern.asInstanceOf[JPattern[T, T]])
+  def getPattern: Pattern = Pattern(jPatternStream.getPattern)
 
   def getInputStream: DataStream[T] = asScalaStream(jPatternStream.getInputStream())
 

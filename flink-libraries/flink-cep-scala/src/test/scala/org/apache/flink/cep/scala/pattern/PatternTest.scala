@@ -19,7 +19,7 @@
 package org.apache.flink.cep.scala.pattern
 
 import org.apache.flink.api.common.functions.FilterFunction
-import org.apache.flink.cep.pattern.EventPattern.event
+import org.apache.flink.cep.pattern.EventPattern.{event, subevent}
 import org.apache.flink.cep.pattern.functions.{AndFilterFunction, SubtypeFilterFunction}
 import org.apache.flink.cep.pattern.{EventPattern => JEventPattern, Pattern => JPattern}
 import org.apache.flink.cep.scala._
@@ -35,11 +35,9 @@ class PatternTest {
     * These tests simply check that the pattern construction completes without failure and that the
     * Scala API pattern is synchronous with its wrapped Java API pattern.
     */
-
   @Test
   def testStrictContiguity(): Unit = {
-    val pattern: Pattern[Event, Event] =
-      &[Event]("start") -> &[Event]("next") -> &[Event]("end")
+    val pattern = &[Event]("start") -> &[Event]("next") -> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .next(event[Event]("next"))
@@ -50,11 +48,9 @@ class PatternTest {
     assertTrue(checkCongruentRepresentations(pattern, pattern.wrappedPattern))
   }
 
-
   @Test
   def testNonStrictContiguity(): Unit = {
-    val pattern: Pattern[Event, Event] =
-      &[Event]("start") ->> &[Event]("next") ->> &[Event]("end")
+    val pattern = &[Event]("start") ->> &[Event]("next") ->> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .followedBy(event[Event]("next"))
@@ -66,10 +62,10 @@ class PatternTest {
 
   @Test
   def testStrictContiguityWithCondition(): Unit = {
-    val pattern: Pattern[Event, Event] =
+    val pattern =
       &[Event]("start") ->
-      &[Event]("next").where(_.getName == "foobar") ->
-      &[Event]("end").where(_.getId == 42)
+      &[Event]("next", _.getName == "foobar") ->
+      &[Event]("end", _.getId == 42)
 
     val jPattern = event[Event]("start")
       .next(
@@ -93,13 +89,11 @@ class PatternTest {
 
   @Test
   def testPatternWithSubtyping(): Unit = {
-    val pattern: Pattern[Event, Event] =
-      &[Event]("start") -> &[Event]("subevent", classOf[SubEvent]) ->> &[Event]("end")
+    val pattern = &[Event]("start") -> &[SubEvent]("subevent") ->> &[Event]("end")
 
     val jPattern = event[Event]("start")
       .next(
-        event[Event]("subevent")
-          .subtype(classOf[SubEvent])
+        subevent("subevent", classOf[SubEvent])
       )
       .followedBy(
         event[Event]("end")
@@ -111,15 +105,11 @@ class PatternTest {
 
   @Test
   def testPatternWithSubtypingAndFilter(): Unit = {
-    val pattern: Pattern[Event, Event] =
-      &[Event]("start") ->
-      &[Event]("subevent", classOf[SubEvent])
-        .where(_ => false) ->> &[Event]("end")
+    val pattern = &[Event]("start") -> &[SubEvent]("subevent", _ => false) ->> &[Event]("end")
 
     val jpattern = event[Event]("start")
       .next(
-        event[Event]("subevent")
-          .subtype(classOf[SubEvent])
+        subevent("subevent", classOf[SubEvent])
           .where(new FilterFunction[SubEvent]() {
             @throws[Exception]
             def filter(value: SubEvent): Boolean = false
@@ -133,16 +123,18 @@ class PatternTest {
     assertTrue(checkCongruentRepresentations(wrapPattern(jpattern).get, jpattern))
   }
 
-  def checkCongruentRepresentations[T, _ <: T](pattern: Pattern[T, _ <: T],
-                                               jPattern: JPattern[T, _ <: T]): Boolean = {
+  def checkCongruentRepresentations(
+    pattern: Pattern,
+    jPattern: JPattern
+  ): Boolean = {
     if ((pattern == null && jPattern == null)
         || (pattern != null && jPattern != null)
            //check equal pattern names
-           && ((pattern.wrappedPattern.getClass != classOf[JEventPattern[T, _ <: T]] &&
-                jPattern.getClass != classOf[JEventPattern[T, _ <: T]]) ||
+           && ((pattern.wrappedPattern.getClass != classOf[JEventPattern[_]] &&
+                jPattern.getClass != classOf[JEventPattern[_]]) ||
                (
-               pattern.wrappedPattern.asInstanceOf[JEventPattern[T, _ <: T]].getName ==
-               jPattern.asInstanceOf[JEventPattern[T, _ <: T]].getName))
+               pattern.wrappedPattern.asInstanceOf[JEventPattern[_]].getName ==
+               jPattern.asInstanceOf[JEventPattern[_]].getName))
            //check equal time windows
            && threeWayEquals(
       pattern.getWindowTime.orNull,

@@ -25,14 +25,12 @@ package object pattern {
     * for usage with the Scala API.
     *
     * @param javaPattern The underlying pattern from the Java API
-    * @tparam T Base type of the elements appearing in the pattern
-    * @tparam F Subtype of T to which the current pattern operator is constrained
     * @return A pattern from the Scala API which wraps the pattern from the Java API
     */
-  private[flink] def wrapPattern[T, F <: T](javaPattern: JPattern[T, F])
-  : Option[Pattern[T, F]] = javaPattern match {
-    case f: JEventPattern[T, F] => Some(Pattern[T, F](f))
-    case p: JPattern[T, F] => Some(Pattern[T, F](p))
+  private[flink] def wrapPattern(javaPattern: JPattern)
+  : Option[Pattern] = javaPattern match {
+    case f: JEventPattern[_] => Some(Pattern(f))
+    case p: JPattern => Some(Pattern(p))
     case _ => None
   }
 }

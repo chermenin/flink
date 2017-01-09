@@ -45,14 +45,14 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testStrictContiguity() {
-		Pattern<Object, ?> pattern = event("start").next(event("next")).next(event("end"));
+		Pattern pattern = event("start").next(event("next")).next(event("end"));
 
-		Collection<Pattern<Object, ?>> parents;
-		Collection<Pattern<Object, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Object, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -60,12 +60,12 @@ public class PatternTest extends TestLogger {
 		assertEquals(pattern.getClass(), EventPattern.class);
 		assertEquals(((EventPattern) pattern).getName(), "end");
 
-		for (Pattern<Object, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "next");
 		}
 
-		for (Pattern<Object, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 		}
@@ -73,15 +73,15 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testNonStrictContiguity() {
-		Pattern<Object, ?> pattern =
+		Pattern pattern =
 			event("start").followedBy(event("next")).followedBy(event("end"));
 
-		Collection<Pattern<Object, ?>> parents;
-		Collection<Pattern<Object, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Object, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -89,12 +89,12 @@ public class PatternTest extends TestLogger {
 		assertEquals(pattern.getClass(), EventPattern.class);
 		assertEquals(((EventPattern) pattern).getName(), "end");
 
-		for (Pattern<Object, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "next");
 		}
 
-		for (Pattern<Object, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 		}
@@ -102,9 +102,9 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testStrictContiguityWithCondition() {
-		Pattern<Event, ?> pattern = event("start", Event.class)
+		Pattern pattern = EventPattern.<Event>event("start")
 			.next(
-				event("next", Event.class)
+				EventPattern.<Event>event("next")
 					.where(new FilterFunction<Event>() {
 						private static final long serialVersionUID = -7657256242101104925L;
 
@@ -115,7 +115,7 @@ public class PatternTest extends TestLogger {
 					})
 			)
 			.next(
-				event("end", Event.class)
+				EventPattern.<Event>event("end")
 					.where(new FilterFunction<Event>() {
 						private static final long serialVersionUID = -7597452389191504189L;
 
@@ -126,12 +126,12 @@ public class PatternTest extends TestLogger {
 					})
 			);
 
-		Collection<Pattern<Event, ?>> parents;
-		Collection<Pattern<Event, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -140,13 +140,13 @@ public class PatternTest extends TestLogger {
 		assertEquals(((EventPattern) pattern).getName(), "end");
 		assertNotNull(pattern.getFilterFunction());
 
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "next");
 			assertNotNull(parent.getFilterFunction());
 		}
 
-		for (Pattern<Event, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 			assertNull(parent.getFilterFunction());
@@ -155,16 +155,16 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testPatternWithSubtyping() {
-		Pattern<Event, ?> pattern = event("start", Event.class)
-			.next(event("subevent", Event.class).subtype(SubEvent.class))
-			.followedBy(event("end", Event.class));
+		Pattern pattern = EventPattern.<Event>event("start")
+			.next(EventPattern.<SubEvent>event("subevent"))
+			.followedBy(EventPattern.<Event>event("end"));
 
-		Collection<Pattern<Event, ?>> parents;
-		Collection<Pattern<Event, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -173,14 +173,14 @@ public class PatternTest extends TestLogger {
 		assertEquals(((EventPattern) pattern).getName(), "end");
 		assertNull(pattern.getFilterFunction());
 
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "subevent");
 			assertNotNull(parent.getFilterFunction());
 			assertEquals(parent.getFilterFunction().getClass(), SubtypeFilterFunction.class);
 		}
 
-		for (Pattern<Event, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 			assertNull(parent.getFilterFunction());
@@ -189,10 +189,9 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testPatternWithSubtypingAndFilter() {
-		Pattern<Event, Event> pattern = event("start", Event.class)
+		Pattern pattern = EventPattern.<Event>event("start")
 			.next(
-				event("subevent", Event.class)
-					.subtype(SubEvent.class)
+				EventPattern.<SubEvent>event("subevent")
 					.where(new FilterFunction<SubEvent>() {
 						private static final long serialVersionUID = -4118591291880230304L;
 
@@ -202,14 +201,14 @@ public class PatternTest extends TestLogger {
 						}
 					})
 			)
-			.followedBy(event("end", Event.class));
+			.followedBy(EventPattern.<Event>event("end"));
 
-		Collection<Pattern<Event, ?>> parents;
-		Collection<Pattern<Event, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -218,7 +217,7 @@ public class PatternTest extends TestLogger {
 		assertEquals(((EventPattern) pattern).getName(), "end");
 		assertNull(pattern.getFilterFunction());
 
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "subevent");
 			assertNotNull(parent.getFilterFunction());
@@ -230,7 +229,7 @@ public class PatternTest extends TestLogger {
 				((AndFilterFunction) parent.getFilterFunction()).getRight().getClass()));
 		}
 
-		for (Pattern<Event, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 			assertNull(parent.getFilterFunction());
@@ -239,7 +238,7 @@ public class PatternTest extends TestLogger {
 
 	@Test
 	public void testPatternWithOrFilter() {
-		Pattern<Event, Event> pattern = event("start", Event.class)
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 					   private static final long serialVersionUID = 3518061453394250543L;
 
@@ -259,7 +258,7 @@ public class PatternTest extends TestLogger {
 				}
 			)
 			.next(
-				event("or", Event.class)
+				EventPattern.<Event>event("or")
 					.or(new FilterFunction<Event>() {
 						private static final long serialVersionUID = -2775487887505922250L;
 
@@ -269,14 +268,14 @@ public class PatternTest extends TestLogger {
 						}
 					})
 			)
-			.followedBy(event("end", Event.class));
+			.followedBy(EventPattern.<Event>event("end"));
 
-		Collection<Pattern<Event, ?>> parents;
-		Collection<Pattern<Event, ?>> parents2 = new ArrayList<>();
+		Collection<Pattern> parents;
+		Collection<Pattern> parents2 = new ArrayList<>();
 
 		parents = pattern.getParents();
 		assertTrue(parents.size() == 1);
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			parents2.addAll(parent.getParents());
 		}
 		assertTrue(parents2.size() == 1);
@@ -285,14 +284,14 @@ public class PatternTest extends TestLogger {
 		assertEquals(((EventPattern) pattern).getName(), "end");
 		assertNull(pattern.getFilterFunction());
 
-		for (Pattern<Event, ?> parent : parents) {
+		for (Pattern parent : parents) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "or");
 			assertNotNull(parent.getFilterFunction());
 			assertNotEquals(parent.getFilterFunction().getClass(), OrFilterFunction.class);
 		}
 
-		for (Pattern<Event, ?> parent : parents2) {
+		for (Pattern parent : parents2) {
 			assertEquals(parent.getClass(), EventPattern.class);
 			assertEquals(((EventPattern) parent).getName(), "start");
 			assertNotNull(parent.getFilterFunction());

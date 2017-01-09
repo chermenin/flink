@@ -53,7 +53,7 @@ public class NFACompiler {
 	 * @return Non-deterministic finite automaton representing the given pattern
 	 */
 	public static <T> NFA<T> compile(
-		Pattern<T, ?> pattern,
+		Pattern pattern,
 		TypeSerializer<T> inputTypeSerializer,
 		boolean timeoutHandling) {
 		NFAFactory<T> factory = compileFactory(pattern, inputTypeSerializer, timeoutHandling);
@@ -73,9 +73,10 @@ public class NFACompiler {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> NFAFactory<T> compileFactory(
-		Pattern<T, ?> pattern,
+		Pattern pattern,
 		TypeSerializer<T> inputTypeSerializer,
-		boolean timeoutHandling) {
+		boolean timeoutHandling
+	) {
 		if (pattern == null) {
 
 			// return a factory for empty NFAs
@@ -90,7 +91,7 @@ public class NFACompiler {
 			// add the beginning state
 			final State<T> beginningState;
 			Map<String, State<T>> states = new HashMap<>();
-			Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates =
+			Collection<Tuple2<State<T>, Pattern>> startStates =
 				compileStates(pattern, states);
 
 			if (states.containsKey(BEGINNING_STATE_NAME)) {
@@ -100,13 +101,13 @@ public class NFACompiler {
 				states.put(BEGINNING_STATE_NAME, beginningState);
 			}
 
-			for (Tuple2<State<T>, Pattern<T, ?>> stateAndPattern : startStates) {
+			for (Tuple2<State<T>, Pattern> stateAndPattern : startStates) {
 				State<T> state = stateAndPattern.f0;
-				Pattern<T, ?> statePattern = stateAndPattern.f1;
+				Pattern statePattern = stateAndPattern.f1;
 				beginningState.addStateTransition(new StateTransition<>(
 					StateTransitionAction.TAKE, state,
 					statePattern instanceof EventPattern
-					? ((EventPattern) statePattern).getFilterFunction()
+					? statePattern.getFilterFunction()
 					: null));
 			}
 
@@ -116,18 +117,18 @@ public class NFACompiler {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static <T> Collection<Tuple2<State<T>, Pattern<T, ?>>> compileStates(
-		Pattern<T, ?> pattern, Map<String, State<T>> states
+	private static <T> Collection<Tuple2<State<T>, Pattern>> compileStates(
+		Pattern pattern, Map<String, State<T>> states
 	) {
-		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
+		Collection<Tuple2<State<T>, Pattern>> startStates = new ArrayList<>();
 
 		if (pattern instanceof EventPattern) {
-			EventPattern<T, ?> eventPattern = (EventPattern<T, ?>) pattern;
+			EventPattern<T> eventPattern = (EventPattern<T>) pattern;
 			State<T> currentState = new State<>(eventPattern.getName(), State.StateType.Final);
 			states.put(eventPattern.getName(), currentState);
 			startStates.addAll(eventPattern.setStates(states, currentState, null));
 		} else {
-			for (Pattern<T, ? extends T> parent : pattern.getParents()) {
+			for (Pattern parent : pattern.getParents()) {
 				startStates.addAll(compileStates(parent, states));
 			}
 		}

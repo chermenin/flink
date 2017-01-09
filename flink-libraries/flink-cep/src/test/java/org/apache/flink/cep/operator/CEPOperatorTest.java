@@ -601,7 +601,7 @@ public class CEPOperatorTest extends TestLogger {
 		@Override
 		public NFA<Event> createNFA() {
 
-			Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+			Pattern pattern = EventPattern.<Event>event("start")
 				.where(new FilterFunction<Event>() {
 					private static final long serialVersionUID = 5726188262756267490L;
 
@@ -611,8 +611,7 @@ public class CEPOperatorTest extends TestLogger {
 					}
 				})
 				.followedBy(
-					EventPattern.<Event>event("middle")
-						.subtype(SubEvent.class)
+					EventPattern.<SubEvent>event("middle")
 						.where(new FilterFunction<SubEvent>() {
 							private static final long serialVersionUID = 6215754202506583964L;
 

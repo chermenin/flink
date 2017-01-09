@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-public class EventPattern<T, F extends T> extends Pattern<T, F> {
+public class EventPattern<T> extends Pattern {
 
 	// name of the pattern operator
 	private final String name;
@@ -41,18 +41,19 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	private boolean canSkip;
 
 	// filter condition for an event to be matched
-	private FilterFunction<F> filterFunction;
+	private FilterFunction<T> filterFunction;
 
 	private EventPattern(String name) {
 		this.name = name;
 	}
 
-	public static <T> EventPattern<T, T> event(final String name) {
+	public static <T> EventPattern<T> event(final String name) {
 		return new EventPattern<>(name);
 	}
 
-	public static <T> EventPattern<T, T> event(final String name, Class<T> tClass) {
-		return new EventPattern<>(name);
+	public static <T> EventPattern<T> subevent(final String name, final Class<T> clazz) {
+		return new EventPattern<T>(name).
+			where(new SubtypeFilterFunction<>(clazz), false);
 	}
 
 	public String getName() {
@@ -60,7 +61,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	}
 
 	@Override
-	public FilterFunction<F> getFilterFunction() {
+	public FilterFunction<T> getFilterFunction() {
 		return filterFunction;
 	}
 
@@ -75,7 +76,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	 * @param filterFunction Filter condition
 	 * @return The same pattern operator where the new filter condition is set
 	 */
-	public EventPattern<T, F> where(FilterFunction<F> filterFunction) {
+	public EventPattern<T> where(FilterFunction<T> filterFunction) {
 		return where(filterFunction, false);
 	}
 
@@ -85,7 +86,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	 * @param filterFunction Filter condition
 	 * @return The same pattern operator where the new filter condition is set
 	 */
-	public EventPattern<T, F> and(FilterFunction<F> filterFunction) {
+	public EventPattern<T> and(FilterFunction<T> filterFunction) {
 		return where(filterFunction, false);
 	}
 
@@ -95,24 +96,11 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 	 * @param filterFunction OR filter condition
 	 * @return The same pattern operator where the new filter condition is set
 	 */
-	public EventPattern<T, F> or(FilterFunction<F> filterFunction) {
+	public EventPattern<T> or(FilterFunction<T> filterFunction) {
 		return where(filterFunction, true);
 	}
 
-	/**
-	 * Applies a subtype constraint on the current pattern operator. This means that an event has
-	 * to be of the given subtype in order to be matched.
-	 *
-	 * @param subtypeClass Class of the subtype
-	 * @param <S>          Type of the subtype
-	 * @return The same pattern operator with the new subtype constraint
-	 */
-	@SuppressWarnings("unchecked")
-	public <S extends F> EventPattern<T, S> subtype(final Class<S> subtypeClass) {
-		return (EventPattern<T, S>) where(new SubtypeFilterFunction<F>(subtypeClass), false);
-	}
-
-	private EventPattern<T, F> where(FilterFunction<F> filterFunction, boolean orFunction) {
+	private EventPattern<T> where(FilterFunction<T> filterFunction, boolean orFunction) {
 		ClosureCleaner.clean(filterFunction, true);
 
 		if (this.filterFunction == null) {
@@ -128,13 +116,13 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Collection<Tuple2<State<T>, Pattern<T, ?>>>
-	setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
+	public <F> Collection<? extends Tuple2<State<F>, Pattern>>
+	setStates(Map<String, State<F>> states, State<F> succeedingState, FilterFunction<F> filterFunction) {
 
-		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
+		Collection<Tuple2<State<F>, Pattern>> startStates = new ArrayList<>();
 
 		// get current state
-		State<T> currentState = succeedingState;
+		State<F> currentState = succeedingState;
 		if (name != null) {
 			if (states.containsKey(name)) {
 				currentState = states.get(name);
@@ -145,7 +133,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 		}
 
 		startStates.addAll(
-			super.setStates(states, currentState, (FilterFunction<T>) this.filterFunction)
+			super.setStates(states, currentState, (FilterFunction<F>) this.filterFunction)
 		);
 
 		// add transitions for current state
@@ -164,7 +152,7 @@ public class EventPattern<T, F extends T> extends Pattern<T, F> {
 		}
 
 		if (getParents().isEmpty()) {
-			startStates.add(Tuple2.<State<T>, Pattern<T, ?>>of(currentState, this));
+			startStates.add(Tuple2.<State<F>, Pattern>of(currentState, this));
 		}
 
 		return startStates;

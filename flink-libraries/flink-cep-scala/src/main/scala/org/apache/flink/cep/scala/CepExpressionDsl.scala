@@ -20,40 +20,44 @@ package org.apache.flink.cep.scala
 
 import org.apache.flink.cep.scala.pattern.{EventPattern, Pattern}
 import org.apache.flink.cep.pattern.{EventPattern => JEventPattern}
+import org.apache.flink.streaming.api.windowing.time.Time
 
 import scala.language.implicitConversions
 
-trait CepImplicitPatternOperations[T, F <: T] {
-  private[flink] def pattern: Pattern[T, F]
-  def ||(other: Pattern[T, _ <: T]): Pattern[T, T] = Pattern.or(pattern, other)
-  def ->(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.next(other)
-  def ->>(other: Pattern[T, _ <: T]): Pattern[T, T] = pattern.followedBy(other)
+trait CepImplicitPatternOperations {
+  private[flink] def pattern: Pattern
+  def ||(other: Pattern): Pattern = Pattern.or(pattern, other)
+  def ->(other: Pattern): Pattern = pattern.next(other)
+  def ->>(other: Pattern): Pattern = pattern.followedBy(other)
+  def in(windowTime: Time): Pattern = pattern.within(windowTime)
 }
 
-trait CepImplicitEventPatternOperations[T, F <: T]
-  extends CepImplicitPatternOperations[T, F] {
-  private[flink] def pattern: EventPattern[T, F]
+trait CepImplicitEventPatternOperations[T]
+  extends CepImplicitPatternOperations {
+  private[flink] def pattern: EventPattern[T]
 }
 
 trait CepImplicitExpressionConversions {
-  implicit class ResolvedPattern[T, F <: T](p: Pattern[T, F])
-    extends CepImplicitPatternOperations[T, F] {
-    def pattern: Pattern[T, F] = p
+  implicit class ResolvedPattern(p: Pattern)
+    extends CepImplicitPatternOperations {
+    def pattern: Pattern = p
   }
 
-  implicit class ResolvedEventPattern[T, F <: T](p: EventPattern[T, F])
-    extends CepImplicitEventPatternOperations[T, F] {
-    def pattern: EventPattern[T, F] = p
+  implicit class ResolvedEventPattern[T](p: EventPattern[T])
+    extends CepImplicitEventPatternOperations[T] {
+    def pattern: EventPattern[T] = p
   }
 }
 
 // scalastyle:off
 object & {
-
-  def apply[T](name: String): EventPattern[T, T] =
-    new EventPattern[T, T](JEventPattern.event(name))
-
-  def apply[T](name: String, clazz: Class[_ <: T]): EventPattern[T, _ <: T] =
-    new EventPattern[T, T](JEventPattern.event(name)).subtype(clazz)
-}
 // scalastyle:on
+
+  def apply[T: Manifest](name: String): EventPattern[T] =
+    new EventPattern(JEventPattern.subevent(
+      name, manifest[T].runtimeClass.asInstanceOf[Class[T]]))
+
+  def apply[T: Manifest](name: String, filterFun: T => Boolean): EventPattern[T] =
+    new EventPattern[T](JEventPattern.subevent(
+      name, manifest[T].runtimeClass.asInstanceOf[Class[T]])).where(filterFun)
+}

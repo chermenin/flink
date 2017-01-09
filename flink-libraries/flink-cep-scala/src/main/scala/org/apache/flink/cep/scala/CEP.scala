@@ -37,7 +37,7 @@ object CEP {
     * @return Resulting pattern stream
     */
   def pattern[T](input: DataStream[T],
-                                  pattern: Pattern[T, _]): PatternStream[T] = {
+                                  pattern: Pattern): PatternStream[T] = {
     wrapPatternStream(JCEP.pattern(input.javaStream, pattern.wrappedPattern))
   }
 }

@@ -48,14 +48,14 @@ public class PatternStream<T> {
 	// underlying data stream
 	private final DataStream<T> inputStream;
 
-	private final Pattern<T, ?> pattern;
+	private final Pattern pattern;
 
-	PatternStream(final DataStream<T> inputStream, final Pattern<T, ?> pattern) {
+	PatternStream(final DataStream<T> inputStream, final Pattern pattern) {
 		this.inputStream = inputStream;
 		this.pattern = pattern;
 	}
 
-	public Pattern<T, ?> getPattern() {
+	public Pattern getPattern() {
 		return pattern;
 	}
 

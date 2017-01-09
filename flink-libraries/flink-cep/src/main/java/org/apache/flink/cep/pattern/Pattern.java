@@ -44,14 +44,11 @@ import java.util.Map;
  *   .followedBy("end").where(new MyFilterFunction());
  * }
  * </pre>
- *
- * @param <T> Base type of the elements appearing in the pattern
- * @param <F> Subtype of T to which the current pattern operator is constrained
  */
-public class Pattern<T, F extends T> {
+public class Pattern {
 
 	// previous pattern operator
-	private Collection<Pattern<T, ? extends T>> parents;
+	private Collection<Pattern> parents;
 
 	// window length in which the pattern match has to occur
 	private Time windowTime;
@@ -60,29 +57,27 @@ public class Pattern<T, F extends T> {
 		this.parents = new HashSet<>();
 	}
 
-	@SafeVarargs
-	private Pattern(final Pattern<T, ? extends T>... parents) {
+	private Pattern(final Pattern... parents) {
 		this.parents = new HashSet<>(Arrays.asList(parents));
 	}
 
-	@SafeVarargs
-	public static <T> Pattern<T, T> or(final Pattern<T, ? extends T>... patterns) {
-		return new Pattern<>(patterns);
+	public static Pattern or(final Pattern... patterns) {
+		return new Pattern(patterns);
 	}
 
-	public Collection<Pattern<T, ? extends T>> getParents() {
+	public Collection<Pattern> getParents() {
 		return parents;
 	}
 
 	protected void setSkipped() {
-		for (Pattern<T, ? extends T> parent : parents) {
+		for (Pattern parent : parents) {
 			parent.setSkipped();
 		}
 	}
 
 	public Time getWindowTime() {
 		long time = this.windowTime != null ? this.windowTime.toMilliseconds() : -1L;
-		for (Pattern<T, ? extends T> parent : parents) {
+		for (Pattern parent : parents) {
 			if (parent.getWindowTime() != null && (
 				parent.getWindowTime().toMilliseconds() < time || time < 0
 			)) {
@@ -100,11 +95,10 @@ public class Pattern<T, F extends T> {
 	 * @param windowTime Time of the matching window
 	 * @return The same pattenr operator with the new window length
 	 */
-	public Pattern<T, F> within(Time windowTime) {
+	public Pattern within(Time windowTime) {
 		if (windowTime != null) {
 			this.windowTime = windowTime;
 		}
-
 		return this;
 	}
 
@@ -117,16 +111,15 @@ public class Pattern<T, F extends T> {
 	 * @param pattern New pattern operator
 	 * @return A new pattern operator which is appended to this pattern operator
 	 */
-	@SuppressWarnings("unchecked")
-	public Pattern<T, T> next(final Pattern<T, ? extends T> pattern) {
+	public Pattern next(final Pattern pattern) {
 		if (pattern instanceof EventPattern) {
-			pattern.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+			pattern.parents = Collections.singleton(this);
 		} else {
-			for (Pattern<T, ? extends T> parent : pattern.parents) {
-				parent.parents = Collections.<Pattern<T, ? extends T>>singleton(this);
+			for (Pattern parent : pattern.parents) {
+				parent.parents = Collections.singleton(this);
 			}
 		}
-		return (Pattern<T, T>) pattern;
+		return pattern;
 	}
 
 	/**
@@ -137,21 +130,20 @@ public class Pattern<T, F extends T> {
 	 * @param pattern New pattern operator
 	 * @return A new pattern operator which is appended to this pattern operator
 	 */
-	@SuppressWarnings("unchecked")
-	public Pattern<T, T> followedBy(final Pattern<T, ? extends T> pattern) {
+	public Pattern followedBy(final Pattern pattern) {
 		this.setSkipped();
 		next(pattern);
-		return (Pattern<T, T>) pattern;
+		return pattern;
 	}
 
-	public FilterFunction<F> getFilterFunction() {
+	public FilterFunction getFilterFunction() {
 		return null;
 	}
 
 	@Internal
-	public Collection<Tuple2<State<T>, Pattern<T, ?>>> setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
-		Collection<Tuple2<State<T>, Pattern<T, ?>>> startStates = new ArrayList<>();
-		for (Pattern<T, ? extends T> parent : parents) {
+	public <T> Collection<? extends Tuple2<State<T>, Pattern>> setStates(Map<String, State<T>> states, State<T> succeedingState, FilterFunction<T> filterFunction) {
+		Collection<Tuple2<State<T>, Pattern>> startStates = new ArrayList<>();
+		for (Pattern parent : parents) {
 			startStates.addAll(parent.setStates(states, succeedingState, filterFunction));
 		}
 		return startStates;

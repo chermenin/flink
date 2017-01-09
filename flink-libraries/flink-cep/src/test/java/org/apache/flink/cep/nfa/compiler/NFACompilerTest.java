@@ -48,7 +48,7 @@ public class NFACompilerTest extends TestLogger {
 	 */
 	@Test
 	public void testNFACompilerWithSimplePattern() {
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				private static final long serialVersionUID = 3314714776170474221L;
 
@@ -58,8 +58,7 @@ public class NFACompilerTest extends TestLogger {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>event("middle")
-					.subtype(SubEvent.class)
+				EventPattern.<SubEvent>event("middle")
 			)
 			.next(
 				EventPattern.<Event>event("end")

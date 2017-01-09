@@ -79,7 +79,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(8, "end", 1.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -88,8 +88,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>event("middle")
-					.subtype(SubEvent.class)
+				EventPattern.subevent("middle", SubEvent.class)
 					.where(
 						new FilterFunction<SubEvent>() {
 
@@ -163,7 +162,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -172,8 +171,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 				}
 			})
 			.followedBy(
-				EventPattern.<Event>event("middle")
-					.subtype(SubEvent.class)
+				EventPattern.subevent("middle", SubEvent.class)
 					.where(
 						new FilterFunction<SubEvent>() {
 
@@ -254,7 +252,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -354,7 +352,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -414,7 +412,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Tuple2<>(0, 1),
 			new Tuple2<>(0, 2));
 
-		Pattern<Tuple2<Integer, Integer>, ?> pattern =
+		Pattern pattern =
 			EventPattern.<Tuple2<Integer, Integer>>event("start")
 				.where(new FilterFunction<Tuple2<Integer, Integer>>() {
 					@Override
@@ -450,7 +448,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 
 		DataStream<Integer> input = env.fromElements(1, 2);
 
-		Pattern<Integer, ?> pattern = EventPattern.<Integer>event("start")
+		Pattern pattern = EventPattern.<Integer>event("start")
 			.followedBy(EventPattern.<Integer>event("end"))
 			.within(Time.days(1));
 
@@ -503,7 +501,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			}
 		});
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 
 				@Override
@@ -580,7 +578,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.<Event>event("start")
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {
@@ -649,7 +647,7 @@ public class CEPITCase extends StreamingMultipleProgramsTestBase {
 			new Event(6, "end", 6.0)
 		);
 
-		Pattern<Event, ?> pattern = EventPattern.event("start", Event.class)
+		Pattern pattern = EventPattern.<Event>event("start")
 			.where(new FilterFunction<Event>() {
 				@Override
 				public boolean filter(Event value) throws Exception {

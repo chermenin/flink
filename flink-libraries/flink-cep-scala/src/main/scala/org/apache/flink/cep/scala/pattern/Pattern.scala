@@ -39,10 +39,8 @@ import collection.JavaConverters._
   * }}}
   *
   * @param jPattern Underlying Java API Pattern
-  * @tparam T Base type of the elements appearing in the pattern
-  * @tparam F Subtype of T to which the current pattern operator is constrained
   */
-class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
+class Pattern(jPattern: JPattern) {
 
   private[flink] def wrappedPattern = jPattern
 
@@ -56,13 +54,13 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     *
     * @return Filter condition for an event to be matched
     */
-  def getFilterFunction: Option[FilterFunction[F]] = Option(jPattern.getFilterFunction)
+  def getFilterFunction: Option[FilterFunction[_]] = Option(jPattern.getFilterFunction)
 
   /**
     *
     * @return Parent patterns for this one
     */
-  def getParents: Set[Pattern[T, _ <: T]] = jPattern.getParents.asScala.map(p => Pattern(p)).toSet
+  def getParents: Set[Pattern] = jPattern.getParents.asScala.map(p => Pattern(p)).toSet
 
   /**
     * Defines the maximum time interval for a matching pattern. This means that the time gap
@@ -71,7 +69,7 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param windowTime Time of the matching window
     * @return The same pattern operator with the new window length
     */
-  def within(windowTime: Time): Pattern[T, F] = {
+  def within(windowTime: Time): Pattern = {
     jPattern.within(windowTime)
     this
   }
@@ -85,7 +83,7 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def next(pattern: Pattern[T, _ <: T]): Pattern[T, T] = {
+  def next(pattern: Pattern): Pattern = {
     Pattern(jPattern.next(pattern.wrappedPattern))
   }
 
@@ -97,7 +95,7 @@ class Pattern[T, F <: T](jPattern: JPattern[T, F]) {
     * @param pattern Pattern operator
     * @return A new pattern operator which is appended to this pattern operator
     */
-  def followedBy(pattern: Pattern[T, _ <: T]): Pattern[T, T] = {
+  def followedBy(pattern: Pattern): Pattern = {
     Pattern(jPattern.followedBy(pattern.wrappedPattern))
   }
 }
@@ -108,14 +106,12 @@ object Pattern {
     * Constructs a new Pattern by wrapping a given Java API Pattern
     *
     * @param jPattern Underlying Java API Pattern.
-    * @tparam T Base type of the elements appearing in the pattern
-    * @tparam F Subtype of T to which the current pattern operator is constrained
     * @return New wrapping Pattern object
     */
-  def apply[T, F <: T](jPattern: JPattern[T, F]) = new Pattern[T, F](jPattern)
+  def apply(jPattern: JPattern) = new Pattern(jPattern)
 
-  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event(name))
+  def apply[T](name: String) = new EventPattern[T](JEventPattern.event(name))
 
-  def or[T](left: Pattern[T, _ <: T], right: Pattern[T, _ <: T]) =
-    new Pattern[T, T](JPattern.or(left.wrappedPattern, right.wrappedPattern))
+  def or[T](left: Pattern, right: Pattern) =
+    new Pattern(JPattern.or(left.wrappedPattern, right.wrappedPattern))
 }

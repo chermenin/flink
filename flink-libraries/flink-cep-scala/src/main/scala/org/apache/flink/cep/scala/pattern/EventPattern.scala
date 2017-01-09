@@ -37,9 +37,8 @@ import org.apache.flink.cep.pattern.{EventPattern => JEventPattern}
   *
   * @param jEventPattern Underlying Java API Pattern
   * @tparam T Base type of the elements appearing in the pattern
-  * @tparam F Subtype of T to which the current pattern operator is constrained
   */
-class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
+class EventPattern[T](jEventPattern: JEventPattern[T])
   extends Pattern(jEventPattern) {
 
   /**
@@ -52,20 +51,20 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     *
     * @return Filter condition for an event to be matched
     */
-  override def getFilterFunction: Option[FilterFunction[F]] =
+  override def getFilterFunction: Option[FilterFunction[T]] =
     Option(jEventPattern.getFilterFunction)
-
-  /**
-    * Applies a subtype constraint on the current pattern operator. This means that an event has
-    * to be of the given subtype in order to be matched.
-    *
-    * @param clazz Class of the subtype
-    * @tparam S Type of the subtype
-    * @return The same pattern operator with the new subtype constraint
-    */
-  def subtype[S <: F](clazz: Class[S]): EventPattern[T, S] = {
-    EventPattern[T, S](jEventPattern.subtype(clazz))
-  }
+//
+//  /**
+//    * Applies a subtype constraint on the current pattern operator. This means that an event has
+//    * to be of the given subtype in order to be matched.
+//    *
+//    * @param clazz Class of the subtype
+//    * @tparam S Type of the subtype
+//    * @return The same pattern operator with the new subtype constraint
+//    */
+//  def subtype[S <: F](clazz: Class[S]): EventPattern[T, S] = {
+//    EventPattern[T, S](jEventPattern.subtype(clazz))
+//  }
 
   /**
     * Specifies a filter condition which has to be fulfilled by an event in order to be matched.
@@ -73,8 +72,8 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filter Filter condition
     * @return The same pattern operator where the new filter condition is set
     */
-  def where(filter: FilterFunction[F]): EventPattern[T, F] = {
-    EventPattern[T, F](jEventPattern.where(filter))
+  def where(filter: FilterFunction[T]): EventPattern[T] = {
+    EventPattern[T](jEventPattern.where(filter))
   }
 
   /**
@@ -83,8 +82,8 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filter Or filter function
     * @return The same pattern operator where the new filter condition is set
     */
-  def or(filter: FilterFunction[F]): EventPattern[T, F] = {
-    EventPattern[T, F](jEventPattern.or(filter))
+  def or(filter: FilterFunction[T]): EventPattern[T] = {
+    EventPattern[T](jEventPattern.or(filter))
   }
 
   /**
@@ -93,8 +92,8 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filter Or filter function
     * @return The same pattern operator where the new filter condition is set
     */
-  def and(filter: FilterFunction[F]): EventPattern[T, F] = {
-    EventPattern[T, F](jEventPattern.and(filter))
+  def and(filter: FilterFunction[T]): EventPattern[T] = {
+    EventPattern[T](jEventPattern.and(filter))
   }
 
   /**
@@ -103,11 +102,11 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filterFun Filter condition
     * @return The same pattern operator where the new filter condition is set
     */
-  def where(filterFun: F => Boolean): EventPattern[T, F] = {
-    val filter = new FilterFunction[F] {
-      val cleanFilter: (F) => Boolean = cep.scala.cleanClosure(filterFun)
+  def where(filterFun: T => Boolean): EventPattern[T] = {
+    val filter = new FilterFunction[T] {
+      val cleanFilter: (T) => Boolean = cep.scala.cleanClosure(filterFun)
 
-      override def filter(value: F): Boolean = cleanFilter(value)
+      override def filter(value: T): Boolean = cleanFilter(value)
     }
     where(filter)
   }
@@ -118,11 +117,11 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filterFun Filter condition
     * @return The same pattern operator where the new filter condition is set
     */
-  def or(filterFun: F => Boolean): EventPattern[T, F] = {
-    val filter = new FilterFunction[F] {
-      val cleanFilter: (F) => Boolean = cep.scala.cleanClosure(filterFun)
+  def or(filterFun: T => Boolean): EventPattern[T] = {
+    val filter = new FilterFunction[T] {
+      val cleanFilter: (T) => Boolean = cep.scala.cleanClosure(filterFun)
 
-      override def filter(value: F): Boolean = cleanFilter(value)
+      override def filter(value: T): Boolean = cleanFilter(value)
     }
     or(filter)
   }
@@ -133,11 +132,11 @@ class EventPattern[T, F <: T](jEventPattern: JEventPattern[T, F])
     * @param filterFun Filter condition
     * @return The same pattern operator where the new filter condition is set
     */
-  def and(filterFun: F => Boolean): EventPattern[T, F] = {
-    val filter = new FilterFunction[F] {
-      val cleanFilter: (F) => Boolean = cep.scala.cleanClosure(filterFun)
+  def and(filterFun: T => Boolean): EventPattern[T] = {
+    val filter = new FilterFunction[T] {
+      val cleanFilter: (T) => Boolean = cep.scala.cleanClosure(filterFun)
 
-      override def filter(value: F): Boolean = cleanFilter(value)
+      override def filter(value: T): Boolean = cleanFilter(value)
     }
     and(filter)
   }
@@ -152,8 +151,12 @@ object EventPattern {
     * @tparam T Base type of the elements appearing in the pattern
     * @return New wrapping Pattern object
     */
-  def apply[T](name: String) = new EventPattern[T, T](JEventPattern.event[T](name))
+  def apply[T](name: String) =
+    new EventPattern[T](JEventPattern.event[T](name))
 
-  private def apply[T, F <: T](jEventPattern: JEventPattern[T, F]): EventPattern[T, F] =
-    new EventPattern[T, F](jEventPattern)
+  def apply[T](name: String, clazz: Class[T]) =
+    new EventPattern[T](JEventPattern.subevent[T](name, clazz))
+
+  def apply[T](jEventPattern: JEventPattern[T]): EventPattern[T] =
+    new EventPattern[T](jEventPattern)
 }
