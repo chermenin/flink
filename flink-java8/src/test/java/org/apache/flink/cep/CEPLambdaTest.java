@@ -20,7 +20,6 @@ package org.apache.flink.cep;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.apache.flink.cep.pattern.EventPattern;
 import org.apache.flink.cep.pattern.Pattern;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -29,6 +28,7 @@ import org.apache.flink.util.TestLogger;
 
 import org.junit.Test;
 
+import static org.apache.flink.cep.pattern.EventPattern.event;
 import static org.junit.Assert.*;
 
 public class CEPLambdaTest extends TestLogger {
@@ -44,7 +44,6 @@ public class CEPLambdaTest extends TestLogger {
 		TypeInformation<EventA> eventTypeInformation = TypeExtractor.getForClass(EventA.class);
 		TypeInformation<EventB> outputTypeInformation = TypeExtractor.getForClass(EventB.class);
 
-
 		DataStream<EventA> inputStream = new DataStream<>(
 			StreamExecutionEnvironment.getExecutionEnvironment(),
 			new SourceTransformation<>(
@@ -53,7 +52,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = EventPattern.event("dummy");
+		Pattern dummyPattern = event("dummy");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
@@ -80,7 +79,7 @@ public class CEPLambdaTest extends TestLogger {
 				eventTypeInformation,
 				1));
 
-		Pattern<EventA, ?> dummyPattern = EventPattern.event("start");
+		Pattern dummyPattern = event("start");
 
 		PatternStream<EventA> patternStream = new PatternStream<>(inputStream, dummyPattern);
 
