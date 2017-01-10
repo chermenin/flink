@@ -144,10 +144,10 @@ class PatternStreamScalaJavaAPIInteroperabilityTest extends TestLogger {
     )
 
     val pattern =
-      &[Event]("start", _.getName == "start") ->>
-      (&[Event]("middle1", _.getName == "middle1") ||
-       &[Event]("middle2", _.getName == "middle2")) ->>
-      &[Event]("end", _.getName == "end") in Time.seconds(10)
+      &("start", (e: Event) => e.getName == "start") ->>
+      (&("middle1", (e: Event) => e.getName == "middle1") ||
+       &("middle2", (e: Event) => e.getName == "middle2")) ->>
+      &("end", (e: Event) => e.getName == "end") in Time.seconds(10)
 
     val result = CEP.pattern(input, pattern)
       .select((pattern: mutable.Map[String, Event]) => {

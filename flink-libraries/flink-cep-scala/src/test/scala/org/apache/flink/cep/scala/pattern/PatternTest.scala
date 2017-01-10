@@ -64,8 +64,8 @@ class PatternTest {
   def testStrictContiguityWithCondition(): Unit = {
     val pattern =
       &[Event]("start") ->
-      &[Event]("next", _.getName == "foobar") ->
-      &[Event]("end", _.getId == 42)
+      &("next", (e: Event) => e.getName == "foobar") ->
+      &("end", (e: Event) => e.getId == 42)
 
     val jPattern = event[Event]("start")
       .next(
@@ -105,7 +105,7 @@ class PatternTest {
 
   @Test
   def testPatternWithSubtypingAndFilter(): Unit = {
-    val pattern = &[Event]("start") -> &[SubEvent]("subevent", _ => false) ->> &[Event]("end")
+    val pattern = &[Event]("start") -> &("subevent", (_: SubEvent) => false) ->> &[Event]("end")
 
     val jpattern = event[Event]("start")
       .next(
