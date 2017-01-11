@@ -36,6 +36,10 @@ public class SubtypeFilterFunction<T> implements FilterFunction<T> {
 		this.subtype = subtype;
 	}
 
+	public Class<? extends T> getSubtype() {
+		return subtype;
+	}
+
 	@Override
 	public boolean filter(T value) throws Exception {
 		return subtype.isAssignableFrom(value.getClass());

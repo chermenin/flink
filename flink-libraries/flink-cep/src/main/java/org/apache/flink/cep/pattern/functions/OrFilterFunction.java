@@ -26,27 +26,15 @@ import org.apache.flink.api.common.functions.FilterFunction;
  *
  * @param <T> Type of the element to filter
  */
-public class OrFilterFunction<T> implements FilterFunction<T> {
+public class OrFilterFunction<T> extends BiFilterFunction<T> {
 	private static final long serialVersionUID = -2109562093871155005L;
 
-	private final FilterFunction<T> left;
-	private final FilterFunction<T> right;
-
-	public OrFilterFunction(final FilterFunction<T> left, final FilterFunction<T> right) {
-		this.left = left;
-		this.right = right;
+	public OrFilterFunction(FilterFunction<T> left, FilterFunction<T> right) {
+		super(left, right);
 	}
 
 	@Override
 	public boolean filter(T value) throws Exception {
 		return left.filter(value) || right.filter(value);
-	}
-
-	public FilterFunction<T> getLeft() {
-		return left;
-	}
-
-	public FilterFunction<T> getRight() {
-		return right;
 	}
 }

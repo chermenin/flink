@@ -25,6 +25,7 @@ import org.apache.flink.cep.nfa.State;
 import org.apache.flink.cep.nfa.StateTransition;
 import org.apache.flink.cep.nfa.StateTransitionAction;
 import org.apache.flink.cep.pattern.functions.AndFilterFunction;
+import org.apache.flink.cep.pattern.functions.BiFilterFunction;
 import org.apache.flink.cep.pattern.functions.OrFilterFunction;
 import org.apache.flink.cep.pattern.functions.SubtypeFilterFunction;
 
@@ -156,5 +157,38 @@ public class EventPattern<T> extends Pattern {
 		}
 
 		return startStates;
+	}
+
+	@Override
+	public Pattern optimize(Class<?> clazz) {
+		filterFunction = optimizeFunction(filterFunction, clazz);
+		return super.optimize(clazz);
+	}
+
+	@SuppressWarnings("unchecked")
+	private FilterFunction<T> optimizeFunction(FilterFunction<T> function, Class<?> clazz) {
+		if (function instanceof SubtypeFilterFunction &&
+			((SubtypeFilterFunction) function).getSubtype().isAssignableFrom(clazz)) {
+			return null;
+		} else if (function instanceof BiFilterFunction) {
+			FilterFunction<T> left =
+				optimizeFunction(((BiFilterFunction) function).getLeft(), clazz);
+
+			FilterFunction<T> right =
+				optimizeFunction(((BiFilterFunction) function).getRight(), clazz);
+
+			if (left == null) {
+				return right;
+			} else if (right == null) {
+				return left;
+			} else {
+				return
+					function instanceof AndFilterFunction
+					? new AndFilterFunction<>(left, right)
+					: new OrFilterFunction<>(left, right);
+			}
+		} else {
+			return function;
+		}
 	}
 }

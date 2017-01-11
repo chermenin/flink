@@ -148,4 +148,12 @@ public class Pattern {
 		}
 		return startStates;
 	}
+
+	@Internal
+	public Pattern optimize(Class<?> clazz) {
+		for (Pattern parent : parents) {
+			parent.optimize(clazz);
+		}
+		return this;
+	}
 }
