@@ -54,8 +54,12 @@ object & {
 // scalastyle:on
 
   def apply[T: Manifest](name: String): EventPattern[T] =
-    new EventPattern(JEventPattern.subevent(
-      name, manifest[T].runtimeClass.asInstanceOf[Class[T]]))
+    if (manifest[T].runtimeClass == classOf[Nothing]) {
+      new EventPattern(JEventPattern.event(name))
+    } else {
+      new EventPattern(JEventPattern.subevent(
+        name, manifest[T].runtimeClass.asInstanceOf[Class[T]]))
+    }
 
   def apply[T: Manifest](name: String, filterFun: T => Boolean): EventPattern[T] =
     new EventPattern[T](JEventPattern.subevent(

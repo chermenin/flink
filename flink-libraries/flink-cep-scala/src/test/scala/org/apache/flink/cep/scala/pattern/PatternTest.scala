@@ -37,11 +37,8 @@ class PatternTest {
     */
   @Test
   def testStrictContiguity(): Unit = {
-    val pattern = &[Event]("start") -> &[Event]("next") -> &[Event]("end")
-
-    val jPattern = event[Event]("start")
-      .next(event[Event]("next"))
-      .next(event[Event]("end"))
+    val pattern = &("start") -> &("next") -> &("end")
+    val jPattern = event("start").next(event("next")).next(event("end"))
 
     assertTrue(checkCongruentRepresentations(pattern, jPattern))
     assertTrue(checkCongruentRepresentations(wrapPattern(jPattern).get, jPattern))
@@ -50,11 +47,8 @@ class PatternTest {
 
   @Test
   def testNonStrictContiguity(): Unit = {
-    val pattern = &[Event]("start") ->> &[Event]("next") ->> &[Event]("end")
-
-    val jPattern = event[Event]("start")
-      .followedBy(event[Event]("next"))
-      .followedBy(event[Event]("end"))
+    val pattern = &("start") ->> &("next") ->> &("end")
+    val jPattern = event("start").followedBy(event("next")).followedBy(event("end"))
 
     assertTrue(checkCongruentRepresentations(pattern, jPattern))
     assertTrue(checkCongruentRepresentations(wrapPattern(jPattern).get, jPattern))
@@ -62,21 +56,20 @@ class PatternTest {
 
   @Test
   def testStrictContiguityWithCondition(): Unit = {
-    val pattern =
-      &[Event]("start") ->
+    val pattern = &("start") ->
       &("next", (e: Event) => e.getName == "foobar") ->
       &("end", (e: Event) => e.getId == 42)
 
-    val jPattern = event[Event]("start")
+    val jPattern = event("start")
       .next(
-        event[Event]("next")
+        subevent("next", classOf[Event])
           .where(new FilterFunction[Event]() {
             @throws[Exception]
             def filter(value: Event): Boolean = value.getName == "foobar"
           })
       )
       .next(
-        event[Event]("end")
+        subevent("end", classOf[Event])
           .where(new FilterFunction[Event]() {
             @throws[Exception]
             def filter(value: Event): Boolean = value.getId == 42
@@ -89,15 +82,11 @@ class PatternTest {
 
   @Test
   def testPatternWithSubtyping(): Unit = {
-    val pattern = &[Event]("start") -> &[SubEvent]("subevent") ->> &[Event]("end")
+    val pattern = &("start") -> &[SubEvent]("subevent") ->> &("end")
 
-    val jPattern = event[Event]("start")
-      .next(
-        subevent("subevent", classOf[SubEvent])
-      )
-      .followedBy(
-        event[Event]("end")
-      )
+    val jPattern = event("start")
+      .next(subevent("subevent", classOf[SubEvent]))
+      .followedBy(event("end"))
 
     assertTrue(checkCongruentRepresentations(pattern, jPattern))
     assertTrue(checkCongruentRepresentations(wrapPattern(jPattern).get, jPattern))
@@ -105,9 +94,9 @@ class PatternTest {
 
   @Test
   def testPatternWithSubtypingAndFilter(): Unit = {
-    val pattern = &[Event]("start") -> &("subevent", (_: SubEvent) => false) ->> &[Event]("end")
+    val pattern = &("start") -> &("subevent", (_: SubEvent) => false) ->> &("end")
 
-    val jpattern = event[Event]("start")
+    val jpattern = event("start")
       .next(
         subevent("subevent", classOf[SubEvent])
           .where(new FilterFunction[SubEvent]() {
@@ -115,9 +104,7 @@ class PatternTest {
             def filter(value: SubEvent): Boolean = false
           })
       )
-      .followedBy(
-        event[Event]("end")
-      )
+      .followedBy(event("end"))
 
     assertTrue(checkCongruentRepresentations(pattern, jpattern))
     assertTrue(checkCongruentRepresentations(wrapPattern(jpattern).get, jpattern))
