@@ -48,10 +48,10 @@ import java.util.Map;
 public class Pattern {
 
 	// previous pattern operator
-	private Collection<Pattern> parents;
+	Collection<Pattern> parents;
 
 	// window length in which the pattern match has to occur
-	private Time windowTime;
+	Time windowTime;
 
 	protected Pattern() {
 		this.parents = new HashSet<>();
@@ -151,9 +151,13 @@ public class Pattern {
 
 	@Internal
 	public Pattern optimize(Class<?> clazz) {
+		ArrayList<Pattern> optimizedParents = new ArrayList<>();
 		for (Pattern parent : parents) {
-			parent.optimize(clazz);
+			optimizedParents.add(parent.optimize(clazz));
 		}
-		return this;
+		Pattern optimizedPattern =
+			new Pattern(optimizedParents.toArray(new Pattern[optimizedParents.size()]));
+		optimizedPattern.windowTime = windowTime;
+		return optimizedPattern;
 	}
 }

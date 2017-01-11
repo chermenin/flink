@@ -161,8 +161,16 @@ public class EventPattern<T> extends Pattern {
 
 	@Override
 	public Pattern optimize(Class<?> clazz) {
-		filterFunction = optimizeFunction(filterFunction, clazz);
-		return super.optimize(clazz);
+		EventPattern<T> optimizedPattern = new EventPattern<>(name);
+		optimizedPattern.filterFunction = optimizeFunction(filterFunction, clazz);
+		optimizedPattern.canSkip = canSkip;
+		ArrayList<Pattern> optimizedParents = new ArrayList<>();
+		for (Pattern parent : parents) {
+			optimizedParents.add(parent.optimize(clazz));
+		}
+		optimizedPattern.parents = optimizedParents;
+		optimizedPattern.windowTime = windowTime;
+		return optimizedPattern;
 	}
 
 	@SuppressWarnings("unchecked")

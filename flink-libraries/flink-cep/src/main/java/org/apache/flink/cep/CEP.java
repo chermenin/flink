@@ -36,6 +36,7 @@ public class CEP {
 	 * @return Resulting pattern stream
 	 */
 	public static <T> PatternStream<T> pattern(DataStream<T> input, Pattern pattern) {
-		return new PatternStream<>(input, pattern.optimize(input.getType().getTypeClass()));
+		Pattern optimizedPattern = pattern.optimize(input.getType().getTypeClass());
+		return new PatternStream<>(input, optimizedPattern);
 	}
 }
