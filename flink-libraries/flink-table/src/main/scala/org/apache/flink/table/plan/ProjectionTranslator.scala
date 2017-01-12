@@ -23,6 +23,7 @@ import org.apache.flink.table.api.TableEnvironment
 import org.apache.flink.table.expressions._
 import org.apache.flink.table.plan.logical.{LogicalNode, Project}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object ProjectionTranslator {
@@ -161,6 +162,8 @@ object ProjectionTranslator {
         val newArgs = e.productIterator.map {
           case arg: Expression =>
             replaceAggregationsAndProperties(arg, tableEnv, aggNames, propNames)
+          case array: mutable.WrappedArray[Expression] =>
+            array.map(replaceAggregationsAndProperties(_, tableEnv, aggNames, propNames))
         }
         e.makeCopy(newArgs.toArray)
     }

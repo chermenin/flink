@@ -24,6 +24,7 @@ import org.apache.flink.api.common.typeinfo.{SqlTimeTypeInfo, TypeInformation}
 import org.apache.flink.table.expressions.ExpressionUtils.{convertArray, toMilliInterval, toMonthInterval, toRowInterval}
 import org.apache.flink.table.expressions.TimeIntervalUnit.TimeIntervalUnit
 import org.apache.flink.table.expressions._
+import org.apache.flink.table.api.Table
 import java.math.{BigDecimal => JBigDecimal}
 
 import scala.language.implicitConversions
@@ -110,6 +111,9 @@ trait ImplicitExpressionOperations {
   def asc = Asc(expr)
   def desc = Desc(expr)
 
+
+  def in(subquery: Expression*) = In(expr, subquery)
+  def in(table: Table) = InSub(expr, table)
   /**
     * Returns the start time of a window when applied on a window reference.
     */
